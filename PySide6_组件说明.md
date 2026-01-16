@@ -46,7 +46,7 @@ log_view.clear()                              # 清空内容
 
 #### **QSpinBox** - 数字输入框（整数）
 ```python
-from PySide6.QtWidgets import QSpinBox
+from PySide6.QtWidgets import QSpinBox 
 
 # 创建整数输入框
 thread_count = QSpinBox()

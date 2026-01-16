@@ -4,7 +4,7 @@
 > 代码计划放在：`E:\PyCharm\PythonProject\WebHarvest`
 
 ---
-
+ 
 ## 一、项目目标
 
 - **项目名称**：WebHarvest Windows 桌面采集工具  
@@ -219,7 +219,119 @@ WebHarvest/
 
 ---
 
-## 九、后续实施建议步骤
+## 九、Git 提交和推送脚本使用说明
+
+项目提供了便捷的 Git 操作脚本，用于提交代码和推送到远程仓库。
+
+### 9.1 提交和推送脚本 (`commit_and_push.bat`)
+
+**功能**：
+- 自动切换到 `dev` 分支
+- 检查并添加所有更改的文件
+- 提交代码（需要输入提交信息）
+- 推送到远程 `dev` 分支
+- 详细的执行过程提示和错误诊断
+
+**使用方法**：
+```bash
+# 在项目根目录下运行
+.\commit_and_push.bat
+```
+
+**脚本执行流程**：
+1. ✅ 检查 Git 仓库状态
+2. ✅ 自动切换到 `dev` 分支（如不存在则创建）
+3. ✅ 显示待提交的文件列表
+4. ✅ 添加所有更改到暂存区
+5. ✅ 提示输入提交信息并提交
+6. ✅ 测试 SSH 连接
+7. ✅ 推送到远程仓库
+8. ✅ 显示推送结果和后续提示
+
+**推送成功示例**：
+```
+[成功] 推送完成!
+[信息] 推送详情:
+e3761f5 feat: 新增功能
+[提示] 你可以在Gitee上查看更新:
+  https://gitee.com/fanchenn/web-harvest
+```
+
+**推送失败时的诊断信息**：
+- SSH 密钥问题排查
+- 权限问题检查
+- 网络连接提示
+- 远程仓库地址确认
+- 分支问题解决方案
+
+### 9.2 SSH 诊断脚本 (`fix_ssh_push.bat`)
+
+**功能**：
+- 诊断 SSH 连接问题
+- 检查 SSH 密钥配置
+- 测试 Gitee 连接
+- 修复常见 SSH 问题
+
+**使用方法**：
+```bash
+# 当推送遇到 SSH 问题时运行
+.\fix_ssh_push.bat
+```
+
+**诊断步骤**：
+1. 检查 SSH 密钥文件是否存在
+2. 将密钥添加到 SSH agent
+3. 检查 agent 中的密钥
+4. 测试 SSH 连接到 Gitee
+5. 尝试推送并显示详细错误信息
+
+### 9.3 SSH 密钥配置
+
+**如果遇到 SSH 认证失败**：
+
+1. **检查公钥是否已添加到 Gitee**：
+   - 访问：https://gitee.com/profile/sshkeys
+   - 确认公钥已添加
+
+2. **查看当前公钥**：
+   ```bash
+   type %USERPROFILE%\.ssh\id_rsa_account.pub
+   ```
+
+3. **手动测试 SSH 连接**：
+   ```bash
+   ssh -T git@gitee.com
+   ```
+
+4. **如果连接失败，运行诊断脚本**：
+   ```bash
+   .\fix_ssh_push.bat
+   ```
+
+### 9.4 手动推送命令
+
+如果脚本无法使用，可以手动执行：
+
+```bash
+# 1. 确保在 dev 分支
+git checkout dev
+
+# 2. 添加更改
+git add .
+
+# 3. 提交
+git commit -m "你的提交信息"
+
+# 4. 推送（首次推送需要设置上游）
+git push -u origin dev
+
+# 或后续推送
+git push origin dev
+```
+
+---
+
+## 十、后续实施建议步骤
 
 1. 在 `WebHarvest` 目录中按本说明文档，大致搭出空目录与空模块文件。
 2. 先完成：基础 UI + Requests 引擎 + SQLite 存储的最小可用版本。

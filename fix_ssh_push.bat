@@ -46,25 +46,37 @@ if errorlevel 1 (
 
 echo.
 echo [4/5] 测试SSH连接...
-ssh -T git@gitee.com 2>&1 | findstr /C:"successfully authenticated" >nul
+ssh -T git@gitee.com > temp_ssh_output.txt 2>&1
+findstr /C:"successfully authenticated" temp_ssh_output.txt >nul
 if errorlevel 1 (
-    echo ✗ SSH连接失败
-    echo.
-    echo 可能的原因:
-    echo 1. 公钥未添加到Gitee账户
-    echo 2. 公钥已过期或被删除
-    echo.
-    echo 请检查:
-    echo - 访问 https://gitee.com/profile/sshkeys
-    echo - 确认公钥已添加
-    echo.
-    echo 当前公钥内容:
-    if exist "%SSH_KEY%.pub" (
-        type "%SSH_KEY%.pub"
+    findstr /C:"Hi " temp_ssh_output.txt >nul
+    if errorlevel 1 (
+        echo ✗ SSH连接失败
+        echo.
+        echo SSH测试输出:
+        type temp_ssh_output.txt
+        echo.
+        echo 可能的原因:
+        echo 1. 公钥未添加到Gitee账户
+        echo 2. 公钥已过期或被删除
+        echo.
+        echo 请检查:
+        echo - 访问 https://gitee.com/profile/sshkeys
+        echo - 确认公钥已添加
+        echo.
+        echo 当前公钥内容:
+        if exist "%SSH_KEY%.pub" (
+            type "%SSH_KEY%.pub"
+        )
+    ) else (
+        echo ✓ SSH连接成功（检测到Gitee欢迎消息）
+        type temp_ssh_output.txt
     )
 ) else (
     echo ✓ SSH连接成功
+    type temp_ssh_output.txt
 )
+del temp_ssh_output.txt 2>nul
 
 echo.
 echo [5/5] 尝试推送...
