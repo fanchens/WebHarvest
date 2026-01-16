@@ -21,11 +21,11 @@ if not exist ".git" (
     echo 初始化 Git 仓库...
     git init
     if errorlevel 1 (
-        echo ✗ Git 初始化失败
+        echo [ERROR] Git 初始化失败
         pause
         exit /b 1
     )
-    echo ✓ Git 仓库初始化完成
+    echo [OK] Git 仓库初始化完成
 )
 
 REM 检查远程仓库配置
@@ -34,13 +34,26 @@ if errorlevel 1 (
     echo 添加远程仓库...
     git remote add origin %REPO_URL%
     if errorlevel 1 (
-        echo ✗ 添加远程仓库失败
+        echo [ERROR] 添加远程仓库失败
         pause
         exit /b 1
     )
-    echo ✓ 远程仓库已添加: %REPO_URL%
+    echo [OK] 远程仓库已添加: %REPO_URL%
 ) else (
-    echo ✓ 远程仓库已配置: %REPO_URL%
+    REM 检查并更新远程仓库 URL（如果不同）
+    for /f "tokens=*" %%u in ('git remote get-url origin 2^>nul') do set CURRENT_URL=%%u
+    if not "!CURRENT_URL!"=="%REPO_URL%" (
+        echo 更新远程仓库地址...
+        git remote set-url origin %REPO_URL%
+        if errorlevel 1 (
+            echo [ERROR] 更新远程仓库地址失败
+            pause
+            exit /b 1
+        )
+        echo [OK] 远程仓库地址已更新: %REPO_URL%
+    ) else (
+        echo [OK] 远程仓库已配置: %REPO_URL%
+    )
 )
 
 REM 检查当前分支
@@ -49,11 +62,11 @@ if "!CURRENT_BRANCH!"=="" (
     echo 创建 dev 分支...
     git checkout -b %BRANCH%
     if errorlevel 1 (
-        echo ✗ 创建分支失败
+        echo [ERROR] 创建分支失败
         pause
         exit /b 1
     )
-    echo ✓ 已创建并切换到 dev 分支
+    echo [OK] 已创建并切换到 dev 分支
 ) else if not "!CURRENT_BRANCH!"=="%BRANCH%" (
     echo 当前分支: !CURRENT_BRANCH!
     echo 切换到 dev 分支...
@@ -61,14 +74,14 @@ if "!CURRENT_BRANCH!"=="" (
     if errorlevel 1 (
         git checkout %BRANCH%
         if errorlevel 1 (
-            echo ✗ 切换分支失败
+            echo [ERROR] 切换分支失败
             pause
             exit /b 1
         )
     )
-    echo ✓ 已切换到 dev 分支
+    echo [OK] 已切换到 dev 分支
 ) else (
-    echo ✓ 当前已在 dev 分支
+    echo [OK] 当前已在 dev 分支
 )
 
 echo.
@@ -81,11 +94,11 @@ REM 添加所有更改
 echo 添加所有更改到暂存区...
 git add .
 if errorlevel 1 (
-    echo ✗ 添加文件失败
+    echo [ERROR] 添加文件失败
     pause
     exit /b 1
 )
-echo ✓ 文件已添加到暂存区
+echo [OK] 文件已添加到暂存区
 
 echo.
 
@@ -111,11 +124,11 @@ REM 提交更改
 echo 提交更改...
 git commit -m "!COMMIT_MESSAGE!"
 if errorlevel 1 (
-    echo ✗ 提交失败
+    echo [ERROR] 提交失败
     pause
     exit /b 1
 )
-echo ✓ 提交成功
+echo [OK] 提交成功
 
 echo.
 
@@ -123,17 +136,17 @@ REM 推送到远程仓库
 echo 推送到远程仓库 (dev 分支)...
 git push -u origin %BRANCH%
 if errorlevel 1 (
-    echo ✗ 推送失败，请检查网络连接和权限
+    echo [ERROR] 推送失败，请检查网络连接和权限
     echo 提示: 如果是第一次推送，可能需要先拉取远程分支
     echo 提示: 请确保已配置 SSH 密钥并添加到 Gitee
     pause
     exit /b 1
 )
-echo ✓ 推送成功
+echo [OK] 推送成功
 
 echo.
 echo ========================================
-echo ✓ 所有操作完成！
+echo [OK] 所有操作完成！
 echo ========================================
 pause
 
