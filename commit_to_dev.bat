@@ -20,14 +20,22 @@ REM 自动添加 Gitee SSH 主机密钥（避免首次连接时的手动确认�
 set SSH_DIR=%USERPROFILE%\.ssh
 set KNOWN_HOSTS=%SSH_DIR%\known_hosts
 if not exist "%SSH_DIR%" mkdir "%SSH_DIR%"
+if not exist "%KNOWN_HOSTS%" (
+    echo. > "%KNOWN_HOSTS%"
+)
 findstr /C:"gitee.com" "%KNOWN_HOSTS%" >nul 2>&1
 if errorlevel 1 (
     echo 添加 Gitee SSH 主机密钥到 known_hosts...
-    ssh-keyscan -t ed25519 gitee.com >> "%KNOWN_HOSTS%" 2>nul
+    where ssh-keyscan >nul 2>&1
     if errorlevel 1 (
-        echo [WARN] 无法自动添加 SSH 主机密钥，首次连接时需要手动确认
+        echo [WARN] 未找到 ssh-keyscan 命令，首次连接时需要手动输入 yes
     ) else (
-        echo [OK] SSH 主机密钥已添加
+        ssh-keyscan -t ed25519 gitee.com >> "%KNOWN_HOSTS%" 2>nul
+        if errorlevel 1 (
+            echo [WARN] 无法自动添加 SSH 主机密钥，首次连接时需要手动输入 yes
+        ) else (
+            echo [OK] SSH 主机密钥已添加
+        )
     )
     echo.
 )
@@ -106,6 +114,24 @@ git status --short
 
 echo.
 
+REM 检查是否有未跟踪或已修改的文件
+git status --porcelain >nul 2>&1
+if errorlevel 1 (
+    echo [INFO] 没有需要提交的更改，工作区干净
+    echo.
+    REM 检查是否有未推送的提交
+    git log origin/%BRANCH%..HEAD --oneline >nul 2>&1
+    if not errorlevel 1 (
+        echo 检测到本地有未推送的提交，继续推送...
+        echo.
+        goto :push_only
+    ) else (
+        echo 没有需要推送的内容
+        pause
+        exit /b 0
+    )
+)
+
 REM 添加所有更改
 echo 添加所有更改到暂存区...
 git add .
@@ -118,12 +144,22 @@ echo [OK] 文件已添加到暂存区
 
 echo.
 
-REM 检查是否有更改需要提交
-git status --porcelain >nul
+REM 再次检查是否有更改需要提交
+git status --porcelain >nul 2>&1
 if errorlevel 1 (
-    echo 没有需要提交的更改
-    pause
-    exit /b 0
+    echo [INFO] 添加后没有需要提交的更改
+    echo.
+    REM 检查是否有未推送的提交
+    git log origin/%BRANCH%..HEAD --oneline >nul 2>&1
+    if not errorlevel 1 (
+        echo 检测到本地有未推送的提交，继续推送...
+        echo.
+        goto :push_only
+    ) else (
+        echo 没有需要提交和推送的内容
+        pause
+        exit /b 0
+    )
 )
 
 REM 获取提交信息
@@ -140,21 +176,35 @@ REM 提交更改
 echo 提交更改...
 git commit -m "!COMMIT_MESSAGE!"
 if errorlevel 1 (
-    echo [ERROR] 提交失败
-    pause
-    exit /b 1
+    echo [WARN] 提交失败，可能是没有需要提交的更改
+    REM 检查是否有未推送的提交
+    git log origin/%BRANCH%..HEAD --oneline >nul 2>&1
+    if not errorlevel 1 (
+        echo 检测到本地有未推送的提交，继续推送...
+        echo.
+        goto :push_only
+    ) else (
+        echo 没有需要提交和推送的内容
+        pause
+        exit /b 0
+    )
 )
 echo [OK] 提交成功
 
 echo.
 
+:push_only
 REM 推送到远程仓库
 echo 推送到远程仓库 (dev 分支)...
+REM 设置 SSH 选项，自动接受新的主机密钥（如果之前没有添加成功）
+set GIT_SSH_COMMAND=ssh -o StrictHostKeyChecking=accept-new
 git push -u origin %BRANCH%
+set GIT_SSH_COMMAND=
 if errorlevel 1 (
     echo [ERROR] 推送失败，请检查网络连接和权限
     echo 提示: 如果是第一次推送，可能需要先拉取远程分支
     echo 提示: 请确保已配置 SSH 密钥并添加到 Gitee
+    echo 提示: 如果遇到主机密钥确认提示，请输入 yes 并重新运行脚本
     pause
     exit /b 1
 )
