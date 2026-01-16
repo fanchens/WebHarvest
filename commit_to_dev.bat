@@ -226,9 +226,16 @@ git push -u origin %BRANCH%
 set GIT_SSH_COMMAND=
 if errorlevel 1 (
     echo [ERROR] 推送失败，请检查网络连接和权限
-    echo 提示: 如果是第一次推送，可能需要先拉取远程分支
-    echo 提示: 请确保已配置 SSH 密钥并添加到 Gitee
-    echo 提示: 如果遇到主机密钥确认提示，请输入 yes 并重新运行脚本
+    echo.
+    echo 常见问题排查:
+    echo 1. 如果使用的是 DeployKey（部署密钥），它只支持拉取，不支持推送
+    echo    需要添加 SSH 公钥到 Gitee 个人账户设置中（不是仓库的 DeployKey）
+    echo 2. 检查 SSH 密钥是否正确添加到 Gitee 个人账户
+    echo    访问: https://gitee.com/profile/sshkeys
+    echo 3. 如果是第一次推送，可能需要先拉取远程分支
+    echo 4. 如果遇到主机密钥确认提示，请输入 yes 并重新运行脚本
+    echo.
+    echo 测试 SSH 连接: ssh -T git@gitee.com
     pause
     exit /b 1
 )
