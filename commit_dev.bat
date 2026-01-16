@@ -18,7 +18,7 @@ if not exist ".git" (
 )
 
 REM 检查git状态
-echo 检查git状态...
+echo Checking git status...
 git status --short
 
 REM 切换到dev分支
@@ -40,84 +40,111 @@ if not "!currentBranch!"=="dev" (
     echo 当前已在dev分支
 )
 
+REM 检查是否有未提交的更改
+echo.
+echo Checking for uncommitted changes...
+git status --porcelain > temp_status.txt
+set /p hasChanges=<temp_status.txt
+del temp_status.txt
+
+if "!hasChanges!"=="" (
+    echo No changes to commit, working tree is clean.
+    echo.
+    pause
+    exit /b 0
+)
+
 REM 添加所有更改
 echo.
-echo 添加所有更改的文件...
+echo Adding all changed files...
 git add .
 
 REM 获取提交信息
 echo.
-set /p commitMessage="请输入提交信息: "
+set /p commitMessage="Enter commit message: "
 if "!commitMessage!"=="" (
-    echo 错误: 提交信息不能为空!
+    echo Error: Commit message cannot be empty!
     pause
     exit /b 1
 )
 
 REM 提交更改
 echo.
-echo 提交更改...
+echo Committing changes...
 git commit -m "!commitMessage!"
 
 if !errorlevel! neq 0 (
-    echo 提交失败!
+    echo Commit failed!
     pause
     exit /b 1
 )
 
-echo 提交成功!
+echo Commit successful!
 
 REM 推送到远程
 echo.
-set /p push="是否推送到远程dev分支? (y/n): "
+set /p push="Push to remote dev branch? (y/n): "
 if /i "!push!"=="y" (
     echo.
-    echo 测试SSH连接...
-    ssh -T git@gitee.com >nul 2>&1
-    if !errorlevel! neq 0 (
+    echo Testing SSH connection...
+    ssh -T git@gitee.com > temp_ssh_test.txt 2>&1
+    findstr /C:"DeployKey" temp_ssh_test.txt >nul
+    if !errorlevel! equ 0 (
         echo.
-        echo [警告] SSH连接测试失败!
-        echo 可能的原因:
-        echo 1. SSH密钥未配置或未添加到Gitee账户
-        echo 2. SSH密钥权限问题
+        echo [WARNING] Current SSH key is a DeployKey!
+        echo DeployKey only supports pull/fetch operations, cannot push.
         echo.
-        echo 解决方案:
-        echo 1. 检查SSH密钥: ssh-keygen -l -f ~/.ssh/id_rsa.pub
-        echo 2. 将公钥添加到Gitee: https://gitee.com/profile/sshkeys
-        echo 3. 测试连接: ssh -T git@gitee.com
+        echo Solution:
+        echo 1. Generate a new SSH key for your account:
+        echo    ssh-keygen -t rsa -C "your_email@example.com" -f "%USERPROFILE%\.ssh\id_rsa_account"
         echo.
-        set /p continue="是否继续尝试推送? (y/n): "
+        echo 2. Add the new public key to Gitee account SSH keys:
+        echo    https://gitee.com/profile/sshkeys
+        echo    Copy content from: %USERPROFILE%\.ssh\id_rsa_account.pub
+        echo.
+        echo 3. Configure SSH to use the account key for Gitee:
+        echo    Edit %USERPROFILE%\.ssh\config and add:
+        echo    Host gitee.com
+        echo        HostName gitee.com
+        echo        User git
+        echo        IdentityFile ~/.ssh/id_rsa_account
+        echo.
+        type temp_ssh_test.txt
+        del temp_ssh_test.txt
+        echo.
+        set /p continue="Continue to try push anyway? (y/n): "
         if /i not "!continue!"=="y" (
-            echo 已取消推送
+            echo Push cancelled.
             pause
             exit /b 0
         )
     ) else (
-        echo SSH连接正常
+        del temp_ssh_test.txt
+        echo SSH connection OK
     )
     
     echo.
-    echo 推送到远程dev分支...
+    echo Pushing to remote dev branch...
     git push origin dev
     
     if !errorlevel! equ 0 (
         echo.
         echo ========================================
-        echo 提交并推送成功!
+        echo Commit and push successful!
         echo ========================================
     ) else (
         echo.
         echo ========================================
-        echo 推送失败!
+        echo Push failed!
         echo ========================================
         echo.
-        echo 常见问题排查:
-        echo 1. SSH密钥问题: 运行 ssh -T git@gitee.com 测试
-        echo 2. 权限问题: 确认你有该仓库的推送权限
-        echo 3. 网络问题: 检查网络连接
-        echo 4. 仓库地址: 确认远程仓库地址正确
+        echo Troubleshooting:
+        echo 1. SSH key issue: Run ssh -T git@gitee.com to test
+        echo 2. Permission issue: Confirm you have push permission
+        echo 3. Network issue: Check network connection
+        echo 4. Repository URL: Confirm remote repository URL is correct
         echo.
-        echo 当前远程仓库地址:
+        echo Current remote repository URL:
         git remote -v
         echo.
         pause
@@ -126,7 +153,7 @@ if /i "!push!"=="y" (
 ) else (
     echo.
     echo ========================================
-    echo 提交成功! (未推送)
+    echo Commit successful! (not pushed)
     echo ========================================
 )
 

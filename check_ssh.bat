@@ -1,5 +1,6 @@
 @echo off
 chcp 65001 >nul
+setlocal enabledelayedexpansion
 echo ========================================
 echo SSH连接诊断脚本
 echo ========================================
@@ -29,11 +30,29 @@ if exist "%USERPROFILE%\.ssh\id_rsa.pub" (
 )
 
 echo 2. 测试Gitee SSH连接...
-ssh -T git@gitee.com
+ssh -T git@gitee.com > temp_ssh_output.txt 2>&1
+type temp_ssh_output.txt
 
 if %errorlevel% equ 0 (
     echo.
-    echo [√] SSH连接成功!
+    findstr /C:"DeployKey" temp_ssh_output.txt >nul
+    if !errorlevel! equ 0 (
+        echo [×] 当前使用的是DeployKey (部署密钥)!
+        echo.
+        echo DeployKey只能拉取代码，无法推送代码!
+        echo.
+        echo 解决方案:
+        echo 1. 运行 setup_ssh_account.bat 生成账户SSH密钥
+        echo 2. 或者手动执行:
+        echo    ssh-keygen -t rsa -C "your_email@example.com" -f "%USERPROFILE%\.ssh\id_rsa_account"
+        echo 3. 将新生成的公钥添加到Gitee账户SSH密钥:
+        echo    https://gitee.com/profile/sshkeys
+        echo 4. 配置SSH使用账户密钥 (编辑 %USERPROFILE%\.ssh\config)
+        echo.
+    ) else (
+        echo.
+        echo [√] SSH连接成功! (使用账户密钥)
+    )
 ) else (
     echo.
     echo [×] SSH连接失败!
@@ -52,6 +71,8 @@ if %errorlevel% equ 0 (
     echo    解决: 检查 %USERPROFILE%\.ssh\config 文件
     echo.
 )
+
+del temp_ssh_output.txt 2>nul
 
 echo.
 echo 3. 检查Git远程仓库配置...
