@@ -1,9 +1,8 @@
 @echo off
-chcp 65001 >nul
 setlocal enabledelayedexpansion
 
-REM Git 提交脚本 - 提交到 dev 分支
-REM 仓库地址: git@gitee.com:fanchenn/web-harvest.git (SSH)
+REM Git commit script - commit to dev branch
+REM Repository: git@gitee.com:fanchenn/web-harvest.git (SSH)
 
 set REPO_URL=git@gitee.com:fanchenn/web-harvest.git
 set BRANCH=dev
@@ -12,11 +11,11 @@ set SCRIPT_DIR=%~dp0
 cd /d "%SCRIPT_DIR%"
 
 echo ========================================
-echo Git 提交脚本 - 提交到 dev 分支
+echo Git commit script - commit to dev branch
 echo ========================================
 echo.
 
-REM 自动添加 Gitee SSH 主机密钥（避免首次连接时的手动确认）
+REM Auto-add Gitee SSH host key
 set SSH_DIR=%USERPROFILE%\.ssh
 set KNOWN_HOSTS=%SSH_DIR%\known_hosts
 if not exist "%SSH_DIR%" mkdir "%SSH_DIR%"
@@ -25,161 +24,161 @@ if not exist "%KNOWN_HOSTS%" (
 )
 findstr /C:"gitee.com" "%KNOWN_HOSTS%" >nul 2>&1
 if errorlevel 1 (
-    echo 添加 Gitee SSH 主机密钥到 known_hosts...
+    echo Adding Gitee SSH host key to known_hosts...
     where ssh-keyscan >nul 2>&1
     if errorlevel 1 (
-        echo [WARN] 未找到 ssh-keyscan 命令，首次连接时需要手动输入 yes
+        echo [WARN] ssh-keyscan not found, need to type yes on first connection
     ) else (
         ssh-keyscan -t ed25519 gitee.com >> "%KNOWN_HOSTS%" 2>nul
         if errorlevel 1 (
-            echo [WARN] 无法自动添加 SSH 主机密钥，首次连接时需要手动输入 yes
+            echo [WARN] Failed to add SSH host key, need to type yes on first connection
         ) else (
-            echo [OK] SSH 主机密钥已添加
+            echo [OK] SSH host key added
         )
     )
     echo.
 )
 
-REM 检查是否已初始化 Git 仓库
+REM Check if Git repository is initialized
 if not exist ".git" (
-    echo 初始化 Git 仓库...
+    echo Initializing Git repository...
     git init
     if errorlevel 1 (
-        echo [ERROR] Git 初始化失败
+        echo [ERROR] Git initialization failed
         pause
         exit /b 1
     )
-    echo [OK] Git 仓库初始化完成
+    echo [OK] Git repository initialized
 )
 
-REM 检查远程仓库配置
+REM Check remote repository configuration
 git remote | findstr /C:"origin" >nul
 if errorlevel 1 (
-    echo 添加远程仓库...
+    echo Adding remote repository...
     git remote add origin %REPO_URL%
     if errorlevel 1 (
-        echo [ERROR] 添加远程仓库失败
+        echo [ERROR] Failed to add remote repository
         pause
         exit /b 1
     )
-    echo [OK] 远程仓库已添加: %REPO_URL%
+    echo [OK] Remote repository added: %REPO_URL%
 ) else (
-    REM 检查并更新远程仓库 URL（如果不同）
+    REM Check and update remote URL if different
     for /f "tokens=*" %%u in ('git remote get-url origin 2^>nul') do set CURRENT_URL=%%u
     if not "!CURRENT_URL!"=="%REPO_URL%" (
-        echo 更新远程仓库地址...
+        echo Updating remote repository URL...
         git remote set-url origin %REPO_URL%
         if errorlevel 1 (
-            echo [ERROR] 更新远程仓库地址失败
+            echo [ERROR] Failed to update remote repository URL
             pause
             exit /b 1
         )
-        echo [OK] 远程仓库地址已更新: %REPO_URL%
+        echo [OK] Remote repository URL updated: %REPO_URL%
     ) else (
-        echo [OK] 远程仓库已配置: %REPO_URL%
+        echo [OK] Remote repository configured: %REPO_URL%
     )
 )
 
-REM 检查当前分支
+REM Check current branch
 for /f "tokens=*" %%i in ('git branch --show-current 2^>nul') do set CURRENT_BRANCH=%%i
 if "!CURRENT_BRANCH!"=="" (
-    echo 创建 dev 分支...
+    echo Creating dev branch...
     git checkout -b %BRANCH%
     if errorlevel 1 (
-        echo [ERROR] 创建分支失败
+        echo [ERROR] Failed to create branch
         pause
         exit /b 1
     )
-    echo [OK] 已创建并切换到 dev 分支
+    echo [OK] Created and switched to dev branch
 ) else if not "!CURRENT_BRANCH!"=="%BRANCH%" (
-    echo 当前分支: !CURRENT_BRANCH!
-    echo 切换到 dev 分支...
+    echo Current branch: !CURRENT_BRANCH!
+    echo Switching to dev branch...
     git checkout -b %BRANCH% 2>nul
     if errorlevel 1 (
         git checkout %BRANCH%
         if errorlevel 1 (
-            echo [ERROR] 切换分支失败
+            echo [ERROR] Failed to switch branch
             pause
             exit /b 1
         )
     )
-    echo [OK] 已切换到 dev 分支
+    echo [OK] Switched to dev branch
 ) else (
-    echo [OK] 当前已在 dev 分支
+    echo [OK] Already on dev branch
 )
 
 echo.
-echo 当前 Git 状态:
+echo Current Git status:
 git status --short 2>nul
 
 echo.
 
-REM 检查是否有未跟踪或已修改的文件
+REM Check for untracked or modified files
 git status --porcelain | findstr /R "." >nul 2>&1
 if errorlevel 1 (
-    echo [INFO] 没有需要提交的更改，工作区干净
+    echo [INFO] No changes to commit, working tree clean
     echo.
-    REM 检查远程分支是否存在
+    REM Check if remote branch exists
     git ls-remote --heads origin %BRANCH% >nul 2>&1
     if errorlevel 1 (
-        REM 远程分支不存在，直接推送
-        echo 远程分支不存在，将创建并推送...
+        REM Remote branch doesn't exist, push directly
+        echo Remote branch doesn't exist, will create and push...
         echo.
         goto :push_only
     )
-    REM 检查是否有未推送的提交
+    REM Check for unpushed commits
     git log origin/%BRANCH%..HEAD --oneline 2>nul | findstr /R "." >nul 2>&1
     if not errorlevel 1 (
-        echo 检测到本地有未推送的提交，继续推送...
+        echo Detected unpushed commits, continuing push...
         echo.
         goto :push_only
     ) else (
-        echo 本地和远程已同步，没有需要推送的内容
+        echo Local and remote are synchronized, nothing to push
         pause
         exit /b 0
     )
 )
 
-REM 添加所有更改
-echo 添加所有更改到暂存区
+REM Add all changes
+echo Adding all changes to staging area
 git add .
 if errorlevel 1 (
-    echo [ERROR] 添加文件失败
+    echo [ERROR] Failed to add files
     pause
     exit /b 1
 )
-echo [OK] 文件已添加到暂存区
+echo [OK] Files added to staging area
 
 echo.
 
-REM 再次检查是否有更改需要提交
+REM Check again if there are changes to commit
 git status --porcelain | findstr /R "." >nul 2>&1
 if errorlevel 1 (
-    echo [INFO] 添加后没有需要提交的更改
+    echo [INFO] No changes to commit after adding
     echo.
-    REM 检查远程分支是否存在
+    REM Check if remote branch exists
     git ls-remote --heads origin %BRANCH% >nul 2>&1
     if errorlevel 1 (
-        REM 远程分支不存在，直接推送
-        echo 远程分支不存在，将创建并推送...
+        REM Remote branch doesn't exist, push directly
+        echo Remote branch doesn't exist, will create and push...
         echo.
         goto :push_only
     )
-    REM 检查是否有未推送的提交
+    REM Check for unpushed commits
     git log origin/%BRANCH%..HEAD --oneline 2>nul | findstr /R "." >nul 2>&1
     if not errorlevel 1 (
-        echo 检测到本地有未推送的提交，继续推送...
+        echo Detected unpushed commits, continuing push...
         echo.
         goto :push_only
     ) else (
-        echo 本地和远程已同步，没有需要提交和推送的内容
+        echo Local and remote are synchronized, nothing to commit and push
         pause
         exit /b 0
     )
 )
 
-REM 获取提交信息
-set /p COMMIT_MESSAGE="请输入提交信息 (直接回车使用默认信息): "
+REM Get commit message
+set /p COMMIT_MESSAGE="Enter commit message (press Enter for default): "
 if "!COMMIT_MESSAGE!"=="" (
     for /f "tokens=1-3 delims=/ " %%a in ('date /t') do set DATE_STR=%%c-%%a-%%b
     for /f "tokens=1-2 delims=: " %%a in ('time /t') do set TIME_STR=%%a:%%b
@@ -188,62 +187,96 @@ if "!COMMIT_MESSAGE!"=="" (
 
 echo.
 
-REM 提交更改
-echo 提交更改...
+REM Commit changes
+echo Committing changes...
 git commit -m "!COMMIT_MESSAGE!"
 if errorlevel 1 (
-    echo [WARN] 提交失败，可能是没有需要提交的更改
-    REM 检查远程分支是否存在
+    echo [WARN] Commit failed, may be no changes to commit
+    REM Check if remote branch exists
     git ls-remote --heads origin %BRANCH% >nul 2>&1
     if errorlevel 1 (
-        REM 远程分支不存在，直接推送
-        echo 远程分支不存在，将创建并推送...
+        REM Remote branch doesn't exist, push directly
+        echo Remote branch doesn't exist, will create and push...
         echo.
         goto :push_only
     )
-    REM 检查是否有未推送的提交
+    REM Check for unpushed commits
     git log origin/%BRANCH%..HEAD --oneline 2>nul | findstr /R "." >nul 2>&1
     if not errorlevel 1 (
-        echo 检测到本地有未推送的提交，继续推送...
+        echo Detected unpushed commits, continuing push...
         echo.
         goto :push_only
     ) else (
-        echo 本地和远程已同步，没有需要提交和推送的内容
+        echo Local and remote are synchronized, nothing to commit and push
         pause
         exit /b 0
     )
 )
-echo [OK] 提交成功
+echo [OK] Commit successful
 
 echo.
 
 :push_only
-REM 推送到远程仓库
-echo 推送到远程仓库 (dev 分支)...
-REM 设置 SSH 选项，自动接受新的主机密钥（如果之前没有添加成功）
-set GIT_SSH_COMMAND=ssh -o StrictHostKeyChecking=accept-new
-git push -u origin %BRANCH%
-set GIT_SSH_COMMAND=
-if errorlevel 1 (
-    echo [ERROR] 推送失败，请检查网络连接和权限
-    echo.
-    echo 常见问题排查:
-    echo 1. 如果使用的是 DeployKey（部署密钥），它只支持拉取，不支持推送
-    echo    需要添加 SSH 公钥到 Gitee 个人账户设置中（不是仓库的 DeployKey）
-    echo 2. 检查 SSH 密钥是否正确添加到 Gitee 个人账户
-    echo    访问: https://gitee.com/profile/sshkeys
-    echo 3. 如果是第一次推送，可能需要先拉取远程分支
-    echo 4. 如果遇到主机密钥确认提示，请输入 yes 并重新运行脚本
-    echo.
-    echo 测试 SSH 连接: ssh -T git@gitee.com
-    pause
-    exit /b 1
+REM Push to remote repository
+echo Pushing to remote repository (dev branch)...
+REM Detect available SSH key file
+set SSH_KEY_FILE=
+if exist "%USERPROFILE%\.ssh\id_ed25519" (
+    set SSH_KEY_FILE=%USERPROFILE%\.ssh\id_ed25519
+) else if exist "%USERPROFILE%\.ssh\id_rsa" (
+    set SSH_KEY_FILE=%USERPROFILE%\.ssh\id_rsa
 )
-echo [OK] 推送成功
+REM Set SSH options, auto-accept host key, and specify key file
+if defined SSH_KEY_FILE (
+    set GIT_SSH_COMMAND=ssh -o StrictHostKeyChecking=accept-new -i "%SSH_KEY_FILE%"
+) else (
+    set GIT_SSH_COMMAND=ssh -o StrictHostKeyChecking=accept-new
+)
+git push -u origin %BRANCH% >temp_push_output.txt 2>&1
+set PUSH_ERROR=%ERRORLEVEL%
+type temp_push_output.txt
+findstr /C:"rejected" /C:"fetch first" temp_push_output.txt >nul
+if not errorlevel 1 (
+    REM Push rejected, use force push to overwrite remote branch
+    echo [INFO] Remote has new changes, using force push to overwrite...
+    git push -u origin %BRANCH% --force-with-lease
+    if errorlevel 1 (
+        echo [ERROR] Force push failed
+        del temp_push_output.txt >nul 2>&1
+        set GIT_SSH_COMMAND=
+        set SSH_KEY_FILE=
+        pause
+        exit /b 1
+    )
+    echo [OK] Force push successful
+) else (
+    if %PUSH_ERROR% neq 0 (
+        REM Other push errors
+        echo [ERROR] Push failed, please check network connection and permissions
+        echo.
+        echo Troubleshooting:
+        echo 1. If using DeployKey, it only supports pull, not push
+        echo    Need to add SSH public key to Gitee personal account settings (not repository DeployKey)
+        echo 2. Check if SSH key is correctly added to Gitee personal account
+        echo    Visit: https://gitee.com/profile/sshkeys
+        echo 3. If prompted for host key confirmation, type yes and run script again
+        echo 4. Check if Git is using the correct SSH key
+        echo.
+        echo Test SSH connection: ssh -T git@gitee.com
+        del temp_push_output.txt >nul 2>&1
+        set GIT_SSH_COMMAND=
+        set SSH_KEY_FILE=
+        pause
+        exit /b 1
+    )
+)
+del temp_push_output.txt >nul 2>&1
+set GIT_SSH_COMMAND=
+set SSH_KEY_FILE=
+echo [OK] Push successful
 
 echo.
 echo ========================================
-echo [OK] 所有操作完成！
+echo [OK] All operations completed!
 echo ========================================
 pause
-
