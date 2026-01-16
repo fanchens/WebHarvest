@@ -110,17 +110,17 @@ if "!CURRENT_BRANCH!"=="" (
 
 echo.
 echo 当前 Git 状态:
-git status --short
+git status --short 2>nul
 
 echo.
 
 REM 检查是否有未跟踪或已修改的文件
-git status --porcelain >nul 2>&1
+git status --porcelain | findstr /R "." >nul 2>&1
 if errorlevel 1 (
     echo [INFO] 没有需要提交的更改，工作区干净
     echo.
     REM 检查是否有未推送的提交
-    git log origin/%BRANCH%..HEAD --oneline >nul 2>&1
+    git log origin/%BRANCH%..HEAD --oneline 2>nul | findstr /R "." >nul 2>&1
     if not errorlevel 1 (
         echo 检测到本地有未推送的提交，继续推送...
         echo.
@@ -133,7 +133,7 @@ if errorlevel 1 (
 )
 
 REM 添加所有更改
-echo 添加所有更改到暂存区...
+echo 添加所有更改到暂存区
 git add .
 if errorlevel 1 (
     echo [ERROR] 添加文件失败
@@ -145,12 +145,12 @@ echo [OK] 文件已添加到暂存区
 echo.
 
 REM 再次检查是否有更改需要提交
-git status --porcelain >nul 2>&1
+git status --porcelain | findstr /R "." >nul 2>&1
 if errorlevel 1 (
     echo [INFO] 添加后没有需要提交的更改
     echo.
     REM 检查是否有未推送的提交
-    git log origin/%BRANCH%..HEAD --oneline >nul 2>&1
+    git log origin/%BRANCH%..HEAD --oneline 2>nul | findstr /R "." >nul 2>&1
     if not errorlevel 1 (
         echo 检测到本地有未推送的提交，继续推送...
         echo.
