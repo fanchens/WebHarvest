@@ -1,0 +1,29 @@
+# WebHarvest 采集工具依赖列表
+
+# GUI框架（必须）
+PySide6>=6.5.0
+
+# 网络请求（必须）
+requests>=2.31.0
+certifi>=2023.7.22
+
+# 重试机制（必须）
+tenacity>=8.2.3
+
+# 文本提取（必须）
+newspaper4k>=0.1.0
+trafilatura>=1.6.0
+
+# 数据库（必须）
+# SQLite3 是 Python 内置，无需安装
+# 可选：SQLAlchemy>=2.0.0（如果需要ORM）
+
+# Excel导出（可选，后续实现）
+# openpyxl>=3.1.2
+# xlsxwriter>=3.1.9
+
+# 打包工具（开发时安装，用户不需要）
+# PyInstaller>=6.0.0
+
+
+
