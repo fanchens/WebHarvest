@@ -73,12 +73,12 @@ if "!hasChanges!"=="" (
 )
 
 REM 显示更改的文件
-echo [信息] 检测到以下更改:
+echo [信息] 检测到以下更改
 git status --short
 echo.
 
 REM 添加所有更改
-echo [信息] 正在添加所有更改的文件...
+echo [信息] 正在添加更改的文件...
 git add . 2>nul
 if !errorlevel! neq 0 (
     echo [错误] 添加文件失败!
@@ -175,11 +175,18 @@ echo ----------------------------------------
 echo.
 
 REM 执行推送
-echo [信息] 正在推送到远程dev分支...
+echo [信息] 正在推送代码到远程dev分支...
 echo [信息] 目标: origin/dev
 echo ----------------------------------------
 
-powershell -NoProfile -Command "$sshKey = (Resolve-Path '%SSH_KEY%').Path; if (Test-Path '$sshKey') { ssh-add '$sshKey' 2>&1 | Out-Null; $env:GIT_SSH_COMMAND = \"ssh -i `\"$sshKey`\"\"; } cd 'E:\PyCharm\PythonProject\WebHarvest'; Write-Host '[执行] git push origin dev' -ForegroundColor Yellow; git push origin dev; $exitCode = $LASTEXITCODE; $env:GIT_SSH_COMMAND = $null; exit $exitCode"
+if exist "!SSH_KEY!" (
+    REM 使用SSH密钥文件推送
+    powershell -NoProfile -Command "$sshKey = (Resolve-Path '%SSH_KEY%').Path; ssh-add '$sshKey' 2>&1 | Out-Null; $env:GIT_SSH_COMMAND = \"ssh -i `\"$sshKey`\"\"; cd 'E:\PyCharm\PythonProject\WebHarvest'; Write-Host '[执行] git push origin dev' -ForegroundColor Yellow; git push origin dev; $exitCode = $LASTEXITCODE; $env:GIT_SSH_COMMAND = $null; exit $exitCode"
+) else (
+    REM 使用默认SSH配置推送
+    echo [信息] 使用默认SSH配置推送...
+    git push origin dev
+)
 
 set PUSH_RESULT=!errorlevel!
 
@@ -211,11 +218,11 @@ if !PUSH_RESULT! equ 0 (
     echo.
     echo 2. 权限问题:
     echo    - 确认你有该仓库的推送权限
-    echo    - 检查仓库是否为私有且你有访问权限
+    echo    - 检查仓库访问权限设置
     echo.
     echo 3. 网络问题:
-    echo    - 检查网络连接
-    echo    - 尝试使用VPN或代理
+    echo    - 检查网络连接是否正常
+    echo    - 如需要可尝试使用VPN或代理
     echo.
     echo 4. 远程仓库地址:
     echo    - 当前远程地址:
