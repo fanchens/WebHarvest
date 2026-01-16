@@ -82,6 +82,32 @@ Write-Host "提交成功!" -ForegroundColor Green
 Write-Host ""
 $push = Read-Host "是否推送到远程dev分支? (y/n)"
 if ($push -eq "y" -or $push -eq "Y") {
+    # 测试SSH连接
+    Write-Host ""
+    Write-Host "测试SSH连接..." -ForegroundColor Yellow
+    $sshTest = ssh -T git@gitee.com 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "[警告] SSH连接测试失败!" -ForegroundColor Red
+        Write-Host ""
+        Write-Host "可能的原因:" -ForegroundColor Yellow
+        Write-Host "1. SSH密钥未配置或未添加到Gitee账户"
+        Write-Host "2. SSH密钥权限问题"
+        Write-Host ""
+        Write-Host "解决方案:" -ForegroundColor Yellow
+        Write-Host "1. 检查SSH密钥: ssh-keygen -l -f ~/.ssh/id_rsa.pub"
+        Write-Host "2. 将公钥添加到Gitee: https://gitee.com/profile/sshkeys"
+        Write-Host "3. 测试连接: ssh -T git@gitee.com"
+        Write-Host ""
+        $continue = Read-Host "是否继续尝试推送? (y/n)"
+        if ($continue -ne "y" -and $continue -ne "Y") {
+            Write-Host "已取消推送" -ForegroundColor Yellow
+            exit 0
+        }
+    } else {
+        Write-Host "SSH连接正常" -ForegroundColor Green
+    }
+    
+    Write-Host ""
     Write-Host "推送到远程dev分支..." -ForegroundColor Yellow
     git push origin dev
     
@@ -91,7 +117,20 @@ if ($push -eq "y" -or $push -eq "Y") {
         Write-Host "提交并推送成功!" -ForegroundColor Green
         Write-Host "========================================" -ForegroundColor Green
     } else {
+        Write-Host ""
+        Write-Host "========================================" -ForegroundColor Red
         Write-Host "推送失败!" -ForegroundColor Red
+        Write-Host "========================================" -ForegroundColor Red
+        Write-Host ""
+        Write-Host "常见问题排查:" -ForegroundColor Yellow
+        Write-Host "1. SSH密钥问题: 运行 ssh -T git@gitee.com 测试"
+        Write-Host "2. 权限问题: 确认你有该仓库的推送权限"
+        Write-Host "3. 网络问题: 检查网络连接"
+        Write-Host "4. 仓库地址: 确认远程仓库地址正确"
+        Write-Host ""
+        Write-Host "当前远程仓库地址:" -ForegroundColor Yellow
+        git remote -v
+        Write-Host ""
         exit 1
     }
 } else {

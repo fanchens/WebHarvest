@@ -71,6 +71,32 @@ REM 推送到远程
 echo.
 set /p push="是否推送到远程dev分支? (y/n): "
 if /i "!push!"=="y" (
+    echo.
+    echo 测试SSH连接...
+    ssh -T git@gitee.com >nul 2>&1
+    if !errorlevel! neq 0 (
+        echo.
+        echo [警告] SSH连接测试失败!
+        echo 可能的原因:
+        echo 1. SSH密钥未配置或未添加到Gitee账户
+        echo 2. SSH密钥权限问题
+        echo.
+        echo 解决方案:
+        echo 1. 检查SSH密钥: ssh-keygen -l -f ~/.ssh/id_rsa.pub
+        echo 2. 将公钥添加到Gitee: https://gitee.com/profile/sshkeys
+        echo 3. 测试连接: ssh -T git@gitee.com
+        echo.
+        set /p continue="是否继续尝试推送? (y/n): "
+        if /i not "!continue!"=="y" (
+            echo 已取消推送
+            pause
+            exit /b 0
+        )
+    ) else (
+        echo SSH连接正常
+    )
+    
+    echo.
     echo 推送到远程dev分支...
     git push origin dev
     
@@ -80,7 +106,20 @@ if /i "!push!"=="y" (
         echo 提交并推送成功!
         echo ========================================
     ) else (
+        echo.
+        echo ========================================
         echo 推送失败!
+        echo ========================================
+        echo.
+        echo 常见问题排查:
+        echo 1. SSH密钥问题: 运行 ssh -T git@gitee.com 测试
+        echo 2. 权限问题: 确认你有该仓库的推送权限
+        echo 3. 网络问题: 检查网络连接
+        echo 4. 仓库地址: 确认远程仓库地址正确
+        echo.
+        echo 当前远程仓库地址:
+        git remote -v
+        echo.
         pause
         exit /b 1
     )
