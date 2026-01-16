@@ -58,4 +58,6 @@ Thumbs.db
 # 项目特定
 *.log
 *.tmp
+temp_*.txt
+temp_*.bat
 

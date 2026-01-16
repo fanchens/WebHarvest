@@ -1,3 +1,0 @@
-Hi [33;01mAnonymous (DeployKey)[0m! You've [32msuccessfully[0m authenticated, but GITEE.COM does not provide shell access.
-Note: Perhaps the current use is [33;01mDeployKey.[0m
-Note: DeployKey only supports [33;01mpull/fetch[0m operations
