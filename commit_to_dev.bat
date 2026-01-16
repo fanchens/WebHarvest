@@ -119,6 +119,14 @@ git status --porcelain | findstr /R "." >nul 2>&1
 if errorlevel 1 (
     echo [INFO] 没有需要提交的更改，工作区干净
     echo.
+    REM 检查远程分支是否存在
+    git ls-remote --heads origin %BRANCH% >nul 2>&1
+    if errorlevel 1 (
+        REM 远程分支不存在，直接推送
+        echo 远程分支不存在，将创建并推送...
+        echo.
+        goto :push_only
+    )
     REM 检查是否有未推送的提交
     git log origin/%BRANCH%..HEAD --oneline 2>nul | findstr /R "." >nul 2>&1
     if not errorlevel 1 (
@@ -126,7 +134,7 @@ if errorlevel 1 (
         echo.
         goto :push_only
     ) else (
-        echo 没有需要推送的内容
+        echo 本地和远程已同步，没有需要推送的内容
         pause
         exit /b 0
     )
@@ -149,6 +157,14 @@ git status --porcelain | findstr /R "." >nul 2>&1
 if errorlevel 1 (
     echo [INFO] 添加后没有需要提交的更改
     echo.
+    REM 检查远程分支是否存在
+    git ls-remote --heads origin %BRANCH% >nul 2>&1
+    if errorlevel 1 (
+        REM 远程分支不存在，直接推送
+        echo 远程分支不存在，将创建并推送...
+        echo.
+        goto :push_only
+    )
     REM 检查是否有未推送的提交
     git log origin/%BRANCH%..HEAD --oneline 2>nul | findstr /R "." >nul 2>&1
     if not errorlevel 1 (
@@ -156,7 +172,7 @@ if errorlevel 1 (
         echo.
         goto :push_only
     ) else (
-        echo 没有需要提交和推送的内容
+        echo 本地和远程已同步，没有需要提交和推送的内容
         pause
         exit /b 0
     )
@@ -177,14 +193,22 @@ echo 提交更改...
 git commit -m "!COMMIT_MESSAGE!"
 if errorlevel 1 (
     echo [WARN] 提交失败，可能是没有需要提交的更改
+    REM 检查远程分支是否存在
+    git ls-remote --heads origin %BRANCH% >nul 2>&1
+    if errorlevel 1 (
+        REM 远程分支不存在，直接推送
+        echo 远程分支不存在，将创建并推送...
+        echo.
+        goto :push_only
+    )
     REM 检查是否有未推送的提交
-    git log origin/%BRANCH%..HEAD --oneline >nul 2>&1
+    git log origin/%BRANCH%..HEAD --oneline 2>nul | findstr /R "." >nul 2>&1
     if not errorlevel 1 (
         echo 检测到本地有未推送的提交，继续推送...
         echo.
         goto :push_only
     ) else (
-        echo 没有需要提交和推送的内容
+        echo 本地和远程已同步，没有需要提交和推送的内容
         pause
         exit /b 0
     )
