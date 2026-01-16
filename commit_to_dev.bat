@@ -16,6 +16,22 @@ echo Git 提交脚本 - 提交到 dev 分支
 echo ========================================
 echo.
 
+REM 自动添加 Gitee SSH 主机密钥（避免首次连接时的手动确认）
+set SSH_DIR=%USERPROFILE%\.ssh
+set KNOWN_HOSTS=%SSH_DIR%\known_hosts
+if not exist "%SSH_DIR%" mkdir "%SSH_DIR%"
+findstr /C:"gitee.com" "%KNOWN_HOSTS%" >nul 2>&1
+if errorlevel 1 (
+    echo 添加 Gitee SSH 主机密钥到 known_hosts...
+    ssh-keyscan -t ed25519 gitee.com >> "%KNOWN_HOSTS%" 2>nul
+    if errorlevel 1 (
+        echo [WARN] 无法自动添加 SSH 主机密钥，首次连接时需要手动确认
+    ) else (
+        echo [OK] SSH 主机密钥已添加
+    )
+    echo.
+)
+
 REM 检查是否已初始化 Git 仓库
 if not exist ".git" (
     echo 初始化 Git 仓库...

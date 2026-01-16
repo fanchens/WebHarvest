@@ -16,6 +16,24 @@ Write-Host "Git 提交脚本 - 提交到 dev 分支" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 
+# 自动添加 Gitee SSH 主机密钥（避免首次连接时的手动确认）
+$sshDir = Join-Path $env:USERPROFILE ".ssh"
+$knownHosts = Join-Path $sshDir "known_hosts"
+if (-not (Test-Path $sshDir)) {
+    New-Item -ItemType Directory -Path $sshDir -Force | Out-Null
+}
+if (-not (Test-Path $knownHosts) -or (Get-Content $knownHosts -ErrorAction SilentlyContinue | Select-String -Pattern "gitee.com" -Quiet) -eq $false) {
+    Write-Host "添加 Gitee SSH 主机密钥到 known_hosts..." -ForegroundColor Yellow
+    $result = ssh-keyscan -t ed25519 gitee.com 2>$null
+    if ($result) {
+        Add-Content -Path $knownHosts -Value $result -ErrorAction SilentlyContinue
+        Write-Host "[OK] SSH 主机密钥已添加" -ForegroundColor Green
+    } else {
+        Write-Host "[WARN] 无法自动添加 SSH 主机密钥，首次连接时需要手动确认" -ForegroundColor Yellow
+    }
+    Write-Host ""
+}
+
 # 检查是否已初始化 Git 仓库
 if (-not (Test-Path ".git")) {
     Write-Host "初始化 Git 仓库..." -ForegroundColor Yellow
