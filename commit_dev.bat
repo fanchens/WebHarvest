@@ -1,151 +1,176 @@
 @echo off
-chcp 65001 >nul
+chcp 65001 >nul 2>&1
 setlocal enabledelayedexpansion
 
 echo ========================================
-echo Git提交脚本 - dev分支
+echo Git�ύ�ű� - dev��֧
 echo ========================================
 echo.
 
-REM 切换到项目目录
-cd /d "E:\PyCharm\PythonProject\WebHarvest"
-
-REM 检查是否在git仓库中
-if not exist ".git" (
-    echo 错误: 当前目录不是git仓库!
+REM �л�����ĿĿ¼
+cd /d "E:\PyCharm\PythonProject\WebHarvest" 2>nul
+if !errorlevel! neq 0 (
+    echo ����: �޷��л�����ĿĿ¼!
     pause
     exit /b 1
 )
 
-REM 检查git状态
-echo Checking git status...
-git status --short
-
-REM 切换到dev分支
-echo.
-echo 切换到dev分支...
-git branch --show-current > temp_branch.txt
-set /p currentBranch=<temp_branch.txt
-del temp_branch.txt
-
-if not "!currentBranch!"=="dev" (
-    git branch -a | findstr /C:"dev" >nul
-    if !errorlevel! equ 0 (
-        git checkout dev
-    ) else (
-        echo dev分支不存在，创建dev分支...
-        git checkout -b dev
-    )
-) else (
-    echo 当前已在dev分支
+REM ����Ƿ���git�ֿ���
+if not exist ".git" (
+    echo ����: ��ǰĿ¼����git�ֿ�!
+    pause
+    exit /b 1
 )
 
-REM 检查是否有未提交的更改
+REM ���git״̬
+echo ���git״̬...
+git status --short 2>nul
+
+REM �л���dev��֧
 echo.
-echo Checking for uncommitted changes...
-git status --porcelain > temp_status.txt
-set /p hasChanges=<temp_status.txt
-del temp_status.txt
+echo �л���dev��֧...
+git branch --show-current > temp_branch.txt 2>nul
+if exist temp_branch.txt (
+    set /p currentBranch=<temp_branch.txt
+    del temp_branch.txt 2>nul
+) else (
+    set currentBranch=
+)
+
+if not "!currentBranch!"=="dev" (
+    git branch -a 2>nul | findstr /C:"dev" >nul
+    if !errorlevel! equ 0 (
+        git checkout dev 2>nul
+    ) else (
+        echo dev��֧�����ڣ�����dev��֧...
+        git checkout -b dev 2>nul
+    )
+) else (
+    echo ��ǰ����dev��֧
+)
+
+REM ����Ƿ���δ�ύ�ĸ���
+echo.
+echo ���δ�ύ�ĸ���...
+git status --porcelain > temp_status.txt 2>nul
+if exist temp_status.txt (
+    set /p hasChanges=<temp_status.txt
+    del temp_status.txt 2>nul
+) else (
+    set hasChanges=
+)
 
 if "!hasChanges!"=="" (
-    echo No changes to commit, working tree is clean.
+    echo û����Ҫ�ύ�ĸ��ģ��������ɾ���
     echo.
     pause
     exit /b 0
 )
 
-REM 添加所有更改
+REM �������и���
 echo.
-echo Adding all changed files...
-git add .
+echo �������и��ĵ��ļ�...
+git add . 2>nul
 
-REM 获取提交信息
+REM ��ȡ�ύ��Ϣ
 echo.
-set /p commitMessage="Enter commit message: "
+set /p commitMessage="�������ύ��Ϣ: "
 if "!commitMessage!"=="" (
-    echo Error: Commit message cannot be empty!
+    echo ����: �ύ��Ϣ����Ϊ��!
     pause
     exit /b 1
 )
 
-REM 提交更改
+REM �ύ����
 echo.
-echo Committing changes...
-git commit -m "!commitMessage!"
+echo �ύ����...
+git commit -m "!commitMessage!" 2>nul
 
 if !errorlevel! neq 0 (
-    echo Commit failed!
+    echo �ύʧ��!
     pause
     exit /b 1
 )
 
-echo Commit successful!
+echo �ύ�ɹ�!
 
-REM 推送到远程
+REM ���͵�Զ��
 echo.
-set /p push="Push to remote dev branch? (y/n): "
+set /p push="�Ƿ����͵�Զ��dev��֧? (y/n): "
 if /i "!push!"=="y" (
     echo.
-    echo Testing SSH connection...
+    echo ����SSH����...
     ssh -T git@gitee.com > temp_ssh_test.txt 2>&1
-    findstr /C:"DeployKey" temp_ssh_test.txt >nul
+    findstr /C:"DeployKey" temp_ssh_test.txt >nul 2>nul
     if !errorlevel! equ 0 (
         echo.
-        echo [WARNING] Current SSH key is a DeployKey!
-        echo DeployKey only supports pull/fetch operations, cannot push.
+        echo [����] ��ǰSSH��Կ��DeployKey!
+        echo DeployKey��֧����ȡ�������޷����͡�
         echo.
-        echo Solution:
-        echo 1. Generate a new SSH key for your account:
+        echo �������:
+        echo 1. Ϊ�˻������µ�SSH��Կ:
         echo    ssh-keygen -t rsa -C "your_email@example.com" -f "%USERPROFILE%\.ssh\id_rsa_account"
         echo.
-        echo 2. Add the new public key to Gitee account SSH keys:
+        echo 2. ���¹�Կ���ӵ�Gitee�˻�SSH��Կ:
         echo    https://gitee.com/profile/sshkeys
-        echo    Copy content from: %USERPROFILE%\.ssh\id_rsa_account.pub
+        echo    ����������: %USERPROFILE%\.ssh\id_rsa_account.pub
         echo.
-        echo 3. Configure SSH to use the account key for Gitee:
-        echo    Edit %USERPROFILE%\.ssh\config and add:
+        echo 3. ����SSHʹ���˻���Կ:
+        echo    �༭ %USERPROFILE%\.ssh\config ������:
         echo    Host gitee.com
         echo        HostName gitee.com
         echo        User git
         echo        IdentityFile ~/.ssh/id_rsa_account
         echo.
-        type temp_ssh_test.txt
-        del temp_ssh_test.txt
+        if exist temp_ssh_test.txt type temp_ssh_test.txt
+        del temp_ssh_test.txt 2>nul
         echo.
-        set /p continue="Continue to try push anyway? (y/n): "
+        set /p continue="�Ƿ������������? (y/n): "
         if /i not "!continue!"=="y" (
-            echo Push cancelled.
+            echo ��ȡ�����͡�
             pause
             exit /b 0
         )
     ) else (
-        del temp_ssh_test.txt
-        echo SSH connection OK
+        if exist temp_ssh_test.txt del temp_ssh_test.txt 2>nul
+        echo SSH��������
     )
     
     echo.
-    echo Pushing to remote dev branch...
-    git push origin dev
+    echo ���͵�Զ��dev��֧...
     
-    if !errorlevel! equ 0 (
+    REM ����SSH������ʹ���˻���Կ���������·�����⣩
+    set "SSH_KEY_PATH=%USERPROFILE%\.ssh\id_rsa_account"
+    if exist "!SSH_KEY_PATH!" (
+        echo ʹ��SSH��Կ: !SSH_KEY_PATH!
+        REM ʹ��PowerShell���û���������ִ��git push
+        powershell -NoProfile -Command "$sshKey = (Resolve-Path '%USERPROFILE%\.ssh\id_rsa_account').Path; $env:GIT_SSH_COMMAND = \"ssh -i `\"$sshKey`\"\"; cd 'E:\PyCharm\PythonProject\WebHarvest'; git push origin dev; $exitCode = $LASTEXITCODE; $env:GIT_SSH_COMMAND = $null; exit $exitCode"
+        set PUSH_RESULT=!errorlevel!
+    ) else (
+        REM ���δ�ҵ��˻���Կ��ʹ��Ĭ�Ϸ�ʽ
+        git push origin dev 2>nul
+        set PUSH_RESULT=!errorlevel!
+    )
+    
+    if !PUSH_RESULT! equ 0 (
         echo.
         echo ========================================
-        echo Commit and push successful!
+        echo �ύ�����ͳɹ�!
         echo ========================================
     ) else (
         echo.
         echo ========================================
-        echo Push failed!
+        echo ����ʧ��!
         echo ========================================
         echo.
-        echo Troubleshooting:
-        echo 1. SSH key issue: Run ssh -T git@gitee.com to test
-        echo 2. Permission issue: Confirm you have push permission
-        echo 3. Network issue: Check network connection
-        echo 4. Repository URL: Confirm remote repository URL is correct
+        echo �����Ų�:
+        echo 1. SSH��Կ����: ���� ssh -T git@gitee.com ����
+        echo 2. Ȩ������: ȷ����������Ȩ��
+        echo 3. ��������: �����������
+        echo 4. �ֿ��ַ: ȷ��Զ�ֿ̲��ַ��ȷ
         echo.
-        echo Current remote repository URL:
-        git remote -v
+        echo ��ǰԶ�ֿ̲��ַ:
+        git remote -v 2>nul
         echo.
         pause
         exit /b 1
@@ -153,9 +178,8 @@ if /i "!push!"=="y" (
 ) else (
     echo.
     echo ========================================
-    echo Commit successful! (not pushed)
+    echo �ύ�ɹ�! (δ����)
     echo ========================================
 )
 
 pause
-
