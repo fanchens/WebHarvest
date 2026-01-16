@@ -3,9 +3,9 @@ chcp 65001 >nul
 setlocal enabledelayedexpansion
 
 REM Git 提交脚本 - 提交到 dev 分支
-REM 仓库地址: https://gitee.com/fanchenn/web-harvest.git
+REM 仓库地址: git@gitee.com:fanchenn/web-harvest.git (SSH)
 
-set REPO_URL=https://gitee.com/fanchenn/web-harvest.git
+set REPO_URL=git@gitee.com:fanchenn/web-harvest.git
 set BRANCH=dev
 set SCRIPT_DIR=%~dp0
 
@@ -125,6 +125,7 @@ git push -u origin %BRANCH%
 if errorlevel 1 (
     echo ✗ 推送失败，请检查网络连接和权限
     echo 提示: 如果是第一次推送，可能需要先拉取远程分支
+    echo 提示: 请确保已配置 SSH 密钥并添加到 Gitee
     pause
     exit /b 1
 )
