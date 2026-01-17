@@ -137,7 +137,15 @@ class ToolCard(QFrame):
     
     def _on_open_tool(self):
         """打开工具按钮点击事件"""
-        # TODO: 后续实现工具打开逻辑
+        # 动态导入BaseToolWindow，避免循环导入
+        from webharvest.ui.tool_windows import BaseToolWindow
+        
+        # 创建工具窗口
+        tool_window = BaseToolWindow(tool_name=self._name, parent=self.window())
+        
+        # 显示窗口
+        tool_window.show()
+        
         print(f"打开工具: {self._name}")
     
     def sizeHint(self):
