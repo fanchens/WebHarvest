@@ -1,6 +1,6 @@
 @echo off
-:: 切换UTF-8编码，避免中文乱码
-chcp 65001 >nul 2>&1
+:: 切换到GBK编码（适配ANSI脚本的中文显示）
+chcp 936 >nul 2>&1
 setlocal enabledelayedexpansion
 
 echo ========================================
@@ -25,7 +25,7 @@ echo.
 REM ===================== 输入要推送的目标分支 =====================
 echo [信息] 请输入要推送的目标分支名称（例如：test、dev、prod、main）
 echo ----------------------------------------
-set /p targetBranch="目标分支名: "
+set /p targetBranch=目标分支名: 
 echo ----------------------------------------
 if "!targetBranch!"=="" (
     echo [错误] 分支名称不能为空！
@@ -92,7 +92,7 @@ echo.
 :: 获取提交信息
 echo [信息] 请输入提交信息
 echo ----------------------------------------
-set /p commitMessage="提交信息: "
+set /p commitMessage=提交信息: 
 echo ----------------------------------------
 if "!commitMessage!"=="" (
     echo [错误] 提交信息不能为空！
@@ -116,7 +116,7 @@ echo [成功] 提交成功！
 echo.
 
 :push_section
-:: 推送到远程目标分支（核心：当前分支 → 远程目标分支）
+:: 推送到远程目标分支
 echo ========================================
 echo 推送当前分支（!currentBranch!）到远程 !targetBranch! 分支
 echo ========================================
@@ -126,7 +126,7 @@ echo [信息] 远程仓库信息：
 git remote -v 2>nul
 echo.
 
-set /p push="确认推送? (y/n): "
+set /p push=确认推送? (y/n): 
 if /i not "!push!"=="y" (
     echo.
     echo [信息] 已取消推送
@@ -168,7 +168,7 @@ if exist "!SSH_KEY!" (
 echo ----------------------------------------
 echo.
 
-:: 核心修改：推送当前分支到远程目标分支（git push 远程名 当前分支:目标分支）
+:: 核心推送命令
 echo [信息] 正在推送 !currentBranch! 分支到远程 !targetBranch! 分支...
 echo [信息] 目标：origin/!targetBranch!
 echo ----------------------------------------
