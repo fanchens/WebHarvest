@@ -11,7 +11,7 @@
 - **形态**：Windows 桌面应用，最终以 **可安装 EXE 安装包** 形式分发（非单文件 EXE）。  
 - **核心能力**：
   - 静态网页高并发采集（Requests 引擎）
-  - 动态网页 / 登录站点采集（QWebEngineView 引擎）
+  - 动态网页 / 登录站点采集（WebView2 引擎，支持抖音、小红书等现代网站）
   - 自动重试与代理切换
   - 采集结果本地化存储（SQLite + 文件夹）
   - 可视化配置与进度监控界面
@@ -22,7 +22,9 @@
 
 - **语言 & 框架**
   - Python 3.x
-  - PySide6（含 `QWebEngineView`，用于 UI + 浏览器模拟）
+  - PySide6（用于 UI 界面）
+  - WebView2（Microsoft Edge 内核，用于浏览器模拟）
+  - pywebview（WebView2 Python 集成库）
 
 - **采集与解析**
   - `requests` + `requests` 代理配置（HTTP/HTTPS 代理）
@@ -35,7 +37,8 @@
   - Excel 导出（后续可选 `openpyxl` / `xlsxwriter` 等）
 
 - **打包与安装**
-  - PyInstaller：将主程序打包为可分发目录（含 PySide6 + QWebEngine 依赖）
+  - PyInstaller：将主程序打包为可分发目录（含 PySide6 依赖）
+  - WebView2 Runtime：Windows 10/11 系统自带，无需打包（如无，用户需从 Microsoft Store 安装）
   - Inno Setup：制作 Windows 安装向导（桌面图标 / 开始菜单 / 卸载）
 
 ---
@@ -67,7 +70,7 @@ WebHarvest/
 
     engines/                # 采集引擎
       requests_engine.py    # 使用 requests 的静态页面采集
-      qwebengine_engine.py  # 基于 QWebEngineView 的动态页面采集
+      webview2_engine.py    # 基于 WebView2 的动态页面采集
       parser.py             # 封装 newspaper4k + trafilatura 的统一解析接口
 
     storage/                # 本地存储
@@ -93,7 +96,7 @@ WebHarvest/
 
 - 配置内容：
   - 采集 URL 列表
-  - 采集引擎选择：Requests / QWebEngine / 自动模式
+  - 采集引擎选择：Requests / WebView2 / 自动模式
   - 代理设置：单代理 / 代理池
   - 定时任务（简单周期或 cron 类配置）
   - 提取规则（优先使用 `newspaper4k`、是否启用 `trafilatura` 兜底、是否提取图片等）
@@ -112,9 +115,11 @@ WebHarvest/
   - 支持代理、超时配置、重试逻辑
   - 适合不需 JS 渲染的静态页面
 
-- **QWebEngineView 引擎（动态页 / 登录站点）**
-  - 使用 `QWebEngineView` 模拟浏览器加载页面，处理 JS 渲染
+- **WebView2 引擎（动态页 / 登录站点）**
+  - 使用 Microsoft Edge WebView2 模拟浏览器加载页面，处理 JS 渲染
+  - 支持现代网站（抖音、小红书、微博等），不会提示"浏览器版本过低"
   - 支持人工登录后复用 Cookie / Session（适合需要登录的网站）
+  - 自动 Cookie 管理和持久化
   - 可注入 JavaScript 提取需要的 DOM 内容
   - 页面加载成功后，再将 HTML 内容交给解析模块
 
@@ -168,7 +173,7 @@ WebHarvest/
   - 提供：
     - `get_next_proxy()`：获取下一个可用代理
     - 标记失败代理，并进行冷却或降级
-  - Requests 和 QWebEngine 都需统一走此代理配置层
+  - Requests 和 WebView2 都需统一走此代理配置层
 
 ---
 
@@ -178,11 +183,9 @@ WebHarvest/
 
 - 确定统一入口：`webharvest/main.py`
 - 打包关注点：
-  - 正确包含 PySide6 和 QWebEngine 必需的：
-    - 动态库
-    - `qtwebengine_process.exe`
-    - `resources.pak` / `icudtl.dat` 等资源文件
-  - 保证打包后目录结构中，Qt 能正常找到这些资源
+  - 正确包含 PySide6 必需的动态库和资源文件
+  - WebView2 Runtime 由系统提供，无需打包
+  - 打包体积更小（不包含 Qt WebEngine 依赖）
 - 目标产物：
   - 类似 `dist/WebHarvest/` 结构的可运行程序目录（含 exe + 所有依赖）
 
@@ -201,17 +204,18 @@ WebHarvest/
 
 ## 八、常见风险与避坑点（设计阶段提醒）
 
-- **PySide6 + QWebEngine 体积与依赖复杂度**
-  - 打包体积会偏大，这是正常现象
-  - 需要多次试打包，检查缺失的 Qt 组件与资源文件
+- **WebView2 Runtime 依赖**
+  - Windows 10/11 系统自带 WebView2 Runtime，无需额外安装
+  - 如系统无 WebView2，用户需从 Microsoft Store 或官网下载安装
+  - 打包体积更小（不包含 Qt WebEngine 依赖）
 
 - **路径与权限**
   - 避免将可写数据放在 `C:\Program Files` 等需要管理员权限的目录
   - 优先使用用户目录 / 用户自选路径，并保证兼容中文、空格路径
 
-- **Qt 线程限制**
-  - QWebEngineView 必须在主 GUI 线程中操作
-  - 高并发建议主要放在 Requests 引擎中，WebEngine 用于少量需要 JS / 登录的页面
+- **WebView2 窗口管理**
+  - WebView2 是独立窗口，不能直接嵌入 Qt Widget
+  - 高并发建议主要放在 Requests 引擎中，WebView2 用于少量需要 JS / 登录的页面
 
 - **后续升级兼容性**
   - Inno Setup 需固定 `AppId`，保证后续升级覆盖安装
@@ -335,7 +339,7 @@ git push origin dev
 
 1. 在 `WebHarvest` 目录中按本说明文档，大致搭出空目录与空模块文件。
 2. 先完成：基础 UI + Requests 引擎 + SQLite 存储的最小可用版本。
-3. 再集成 QWebEngineView，打通动态页面采集流程。
+3. 再集成 WebView2，打通动态页面采集流程。
 4. 最后调试 PyInstaller 打包与 Inno Setup 安装脚本，逐步补齐依赖和路径问题。
 
 > 本文档会作为实现过程中的「蓝图」，后续如有新需求或架构调整，可以在此基础上迭代更新。

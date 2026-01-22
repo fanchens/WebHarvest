@@ -18,12 +18,17 @@ trafilatura>=1.6.0
 # SQLite3 是 Python 内置，无需安装
 # 可选：SQLAlchemy>=2.0.0（如果需要ORM）
 
-# Excel导出（可选，后续实现）
-# openpyxl>=3.1.2
-# xlsxwriter>=3.1.9
+# Excel导出（可选，但推荐安装）
+openpyxl>=3.1.2  # 用于 Excel (.xlsx) 格式导出
 
 # 打包工具（开发时安装，用户不需要）
 # PyInstaller>=6.0.0
+
+# 浏览器引擎（WebView2 - Windows 10+ 内置）
+pywebview>=5.0  # WebView2 集成库，使用 Microsoft Edge 内核
+# 注意：WebView2 Runtime 需要 Windows 10/11 系统自带，无需额外安装
+# 如系统无 WebView2，用户需从 Microsoft Store 或官网下载：
+# https://developer.microsoft.com/en-us/microsoft-edge/webview2/
 
 
 
