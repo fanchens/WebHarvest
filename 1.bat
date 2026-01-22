@@ -4,12 +4,26 @@ chcp 65001 >nul 2>&1
 setlocal enabledelayedexpansion
 
 echo ========================================
-echo Git 提交和推送脚本 - 自定义分支版
+echo Git 推送脚本 - 当前分支推目标分支版
 echo ========================================
 echo.
 
-REM ===================== 手动输入目标分支 =====================
-echo [信息] 请输入要操作的目标分支名称（例如：test、dev、prod、main）
+:: 获取当前所在分支
+echo [信息] 检测当前分支...
+git branch --show-current > temp_branch.txt 2>nul
+if exist temp_branch.txt (
+    set /p currentBranch=<temp_branch.txt
+    del temp_branch.txt 2>nul
+) else (
+    echo [错误] 无法获取当前分支！
+    pause
+    exit /b 1
+)
+echo [信息] 当前分支：!currentBranch!
+echo.
+
+REM ===================== 输入要推送的目标分支 =====================
+echo [信息] 请输入要推送的目标分支名称（例如：test、dev、prod、main）
 echo ----------------------------------------
 set /p targetBranch="目标分支名: "
 echo ----------------------------------------
@@ -18,7 +32,10 @@ if "!targetBranch!"=="" (
     pause
     exit /b 1
 )
-echo.
+if "!currentBranch!"=="!targetBranch!" (
+    echo [提示] 当前分支和目标分支相同，将直接推送当前分支到远程！
+    echo.
+)
 REM =============================================================
 
 :: 切换到项目目录
@@ -37,49 +54,10 @@ if not exist ".git" (
 )
 
 :: 显示Git状态
-echo [信息] 检查Git工作区状态...
+echo [信息] 检查当前分支（!currentBranch!）的更改...
 echo ----------------------------------------
 git status --short 2>nul
 echo ----------------------------------------
-echo.
-
-:: 切换到目标分支
-echo [信息] 检查当前分支...
-git branch --show-current > temp_branch.txt 2>nul
-if exist temp_branch.txt (
-    set /p currentBranch=<temp_branch.txt
-    del temp_branch.txt 2>nul
-) else (
-    set currentBranch=
-)
-
-if not "!currentBranch!"=="!targetBranch!" (
-    echo [信息] 当前分支: !currentBranch!
-    echo [信息] 正在切换到 !targetBranch! 分支...
-    git branch -a 2>nul | findstr /C:"!targetBranch!" >nul
-    if !errorlevel! equ 0 (
-        git checkout !targetBranch! 2>nul
-        echo [成功] 已切换到 !targetBranch! 分支
-    ) else (
-        echo [信息] !targetBranch! 分支不存在，基于dev分支创建...
-        git checkout dev 2>nul
-        git pull origin dev 2>nul
-        git checkout -b !targetBranch! 2>nul
-        echo [成功] 已创建并切换到 !targetBranch! 分支
-    )
-) else (
-    echo [信息] 已处于 !targetBranch! 分支
-)
-echo.
-
-:: 拉取远程目标分支最新代码
-echo [信息] 拉取远程 !targetBranch! 分支最新代码...
-git pull origin !targetBranch! 2>nul
-if !errorlevel! equ 0 (
-    echo [成功] 已拉取远程 !targetBranch! 分支最新代码
-) else (
-    echo [提示] 远程 !targetBranch! 分支不存在（首次推送）
-)
 echo.
 
 :: 检查未提交的更改
@@ -90,7 +68,7 @@ for /f "delims=" %%a in (temp_status.txt) do set hasChanges=1
 del temp_status.txt 2>nul
 
 if not defined hasChanges (
-    echo [信息] 没有未提交的更改，跳过提交步骤
+    echo [信息] 当前分支没有未提交的更改，跳过提交步骤
     echo.
     goto :push_section
 )
@@ -123,8 +101,8 @@ if "!commitMessage!"=="" (
 )
 echo.
 
-:: 提交更改
-echo [信息] 正在提交更改...
+:: 提交当前分支的更改
+echo [信息] 正在提交当前分支（!currentBranch!）的更改...
 echo [信息] 提交信息: !commitMessage!
 git commit -m "!commitMessage!" 2>nul
 
@@ -138,20 +116,20 @@ echo [成功] 提交成功！
 echo.
 
 :push_section
-:: 推送到远程目标分支
+:: 推送到远程目标分支（核心：当前分支 → 远程目标分支）
 echo ========================================
-echo 推送到远程仓库 - !targetBranch! 分支
+echo 推送当前分支（!currentBranch!）到远程 !targetBranch! 分支
 echo ========================================
 echo.
+echo [警告] 此操作会将当前分支（!currentBranch!）的代码推送到远程 !targetBranch! 分支！
 echo [信息] 远程仓库信息：
 git remote -v 2>nul
 echo.
 
-set /p push="是否推送到远程 !targetBranch! 分支? (y/n): "
+set /p push="确认推送? (y/n): "
 if /i not "!push!"=="y" (
     echo.
     echo [信息] 已取消推送
-    echo [信息] 手动推送命令：git push origin !targetBranch!
     echo.
     pause
     exit /b 0
@@ -190,16 +168,15 @@ if exist "!SSH_KEY!" (
 echo ----------------------------------------
 echo.
 
-:: 执行推送（首次推送自动加-u）
-echo [信息] 正在推送代码到远程 !targetBranch! 分支...
+:: 核心修改：推送当前分支到远程目标分支（git push 远程名 当前分支:目标分支）
+echo [信息] 正在推送 !currentBranch! 分支到远程 !targetBranch! 分支...
 echo [信息] 目标：origin/!targetBranch!
 echo ----------------------------------------
 
 if exist "!SSH_KEY!" (
-    :: 兼容中文路径的PowerShell命令
-    powershell -NoProfile -Command "$sshKey = [System.IO.Path]::GetFullPath('%SSH_KEY%'); $env:GIT_SSH_COMMAND = 'ssh -i ''$sshKey'''; Set-Location 'E:\PyCharm\PythonProject\WebHarvest'; git push -u origin !targetBranch!; exit $LASTEXITCODE"
+    powershell -NoProfile -Command "$sshKey = [System.IO.Path]::GetFullPath('%SSH_KEY%'); $env:GIT_SSH_COMMAND = 'ssh -i ''$sshKey'''; Set-Location 'E:\PyCharm\PythonProject\WebHarvest'; git push -u origin !currentBranch!:!targetBranch!; exit $LASTEXITCODE"
 ) else (
-    git push -u origin !targetBranch!
+    git push -u origin !currentBranch!:!targetBranch!
 )
 
 set PUSH_RESULT=!errorlevel!
@@ -209,7 +186,7 @@ echo ----------------------------------------
 if !PUSH_RESULT! equ 0 (
     echo.
     echo ========================================
-    echo [成功] !targetBranch! 分支推送完成！
+    echo [成功] 已将 !currentBranch! 分支推送到远程 !targetBranch! 分支！
     echo ========================================
     echo.
     echo [信息] 最新提交记录：
@@ -220,13 +197,13 @@ if !PUSH_RESULT! equ 0 (
 ) else (
     echo.
     echo ========================================
-    echo [错误] !targetBranch! 分支推送失败！
+    echo [错误] 推送 !currentBranch! 到 !targetBranch! 分支失败！
     echo ========================================
     echo.
     echo [排查建议]
     echo 1. SSH密钥问题：执行命令 'ssh -T git@gitee.com'
-    echo 2. 拉取远程更新：执行命令 'git pull origin !targetBranch!'
-    echo 3. 手动推送命令：'git push -u origin !targetBranch!'
+    echo 2. 检查目标分支权限：确认有权限推送至 !targetBranch! 分支
+    echo 3. 手动推送命令：'git push -u origin !currentBranch!:!targetBranch!'
     echo.
 )
 
