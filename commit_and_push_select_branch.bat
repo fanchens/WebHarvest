@@ -1,29 +1,29 @@
-ï»¿@echo off
+@echo off
 chcp 65001 >nul 2>&1
 setlocal enabledelayedexpansion
 
 echo ========================================
-echo Git æäº¤å’Œæ¨é€è„šæœ¬ - åˆ†æ”¯é€‰æ‹©ç‰ˆ
+echo Git Ìá½»ºÍÍÆËÍ½Å±¾ - ·ÖÖ§Ñ¡Ôñ°æ
 echo ========================================
 echo.
 
-REM åˆ‡æ¢åˆ°é¡¹ç›®ç›®å½•
+REM ÇĞ»»µ½ÏîÄ¿Ä¿Â¼
 cd /d "E:\PyCharm\PythonProject\WebHarvest" 2>nul
 if !errorlevel! neq 0 (
-    echo [é”™è¯¯] æ— æ³•åˆ‡æ¢åˆ°é¡¹ç›®ç›®å½•!
+    echo [´íÎó] ÎŞ·¨ÇĞ»»µ½ÏîÄ¿Ä¿Â¼!
     pause
     exit /b 1
 )
 
-REM æ£€æŸ¥æ˜¯å¦æ˜¯gitä»“åº“
+REM ¼ì²éÊÇ·ñÊÇgit²Ö¿â
 if not exist ".git" (
-    echo [é”™è¯¯] å½“å‰ç›®å½•ä¸æ˜¯gitä»“åº“!
+    echo [´íÎó] µ±Ç°Ä¿Â¼²»ÊÇgit²Ö¿â!
     pause
     exit /b 1
 )
 
-REM è·å–å½“å‰åˆ†æ”¯
-echo [ä¿¡æ¯] æ£€æŸ¥å½“å‰åˆ†æ”¯...
+REM »ñÈ¡µ±Ç°·ÖÖ§
+echo [ĞÅÏ¢] ¼ì²éµ±Ç°·ÖÖ§...
 git branch --show-current > temp_current_branch.txt 2>nul
 if exist temp_current_branch.txt (
     set /p currentBranch=<temp_current_branch.txt
@@ -32,8 +32,8 @@ if exist temp_current_branch.txt (
     set currentBranch=
 )
 
-REM è·å–é»˜è®¤åˆ†æ”¯
-echo [ä¿¡æ¯] æ£€æµ‹é»˜è®¤åˆ†æ”¯...
+REM »ñÈ¡Ä¬ÈÏ·ÖÖ§
+echo [ĞÅÏ¢] ¼ì²âÄ¬ÈÏ·ÖÖ§...
 git symbolic-ref refs/remotes/origin/HEAD > temp_default_branch.txt 2>nul
 if exist temp_default_branch.txt (
     set /p defaultBranchRef=<temp_default_branch.txt
@@ -56,47 +56,47 @@ if exist temp_default_branch.txt (
     )
 )
 
-REM åˆ—å‡ºæ‰€æœ‰åˆ†æ”¯
+REM ÁĞ³öËùÓĞ·ÖÖ§
 echo.
 echo ========================================
-echo å¯ç”¨åˆ†æ”¯åˆ—è¡¨
+echo ¿ÉÓÃ·ÖÖ§ÁĞ±í
 echo ========================================
 echo.
-echo [å½“å‰åˆ†æ”¯] !currentBranch!
+echo [µ±Ç°·ÖÖ§] !currentBranch!
 if defined defaultBranch (
-    echo [é»˜è®¤åˆ†æ”¯] !defaultBranch!
+    echo [Ä¬ÈÏ·ÖÖ§] !defaultBranch!
 )
 echo.
-echo æœ¬åœ°åˆ†æ”¯:
+echo ±¾µØ·ÖÖ§:
 git branch 2>nul
 echo.
-echo è¿œç¨‹åˆ†æ”¯:
+echo Ô¶³Ì·ÖÖ§:
 git branch -r 2>nul | findstr /V "HEAD"
 echo.
 echo ========================================
 echo.
 
-REM æ˜¾ç¤ºåˆ†æ”¯è¯´æ˜
-echo åˆ†æ”¯è¯´æ˜:
-echo   master - ä¸»åˆ†æ”¯/ç”Ÿäº§ç¯å¢ƒ
-echo   dev    - å¼€å‘ç¯å¢ƒ
-echo   test   - æµ‹è¯•ç¯å¢ƒ
-echo   prod   - ç”Ÿäº§ç¯å¢ƒ
+REM ÏÔÊ¾·ÖÖ§ËµÃ÷
+echo ·ÖÖ§ËµÃ÷:
+echo   master - Ö÷·ÖÖ§/Éú²ú»·¾³
+echo   dev    - ¿ª·¢»·¾³
+echo   test   - ²âÊÔ»·¾³
+echo   prod   - Éú²ú»·¾³
 echo.
 
-REM è®©ç”¨æˆ·é€‰æ‹©ç›®æ ‡åˆ†æ”¯
+REM ÈÃÓÃ»§Ñ¡ÔñÄ¿±ê·ÖÖ§
 :select_branch
-set /p targetBranch="è¯·é€‰æ‹©ç›®æ ‡åˆ†æ”¯ (master/dev/test/prod) [é»˜è®¤: !currentBranch!]: "
+set /p targetBranch="ÇëÑ¡ÔñÄ¿±ê·ÖÖ§ (master/dev/test/prod) [Ä¬ÈÏ: !currentBranch!]: "
 if "!targetBranch!"=="" (
     set targetBranch=!currentBranch!
 )
 if "!targetBranch!"=="" (
-    echo [é”™è¯¯] æ— æ³•ç¡®å®šç›®æ ‡åˆ†æ”¯!
+    echo [´íÎó] ÎŞ·¨È·¶¨Ä¿±ê·ÖÖ§!
     pause
     exit /b 1
 )
 
-REM éªŒè¯åˆ†æ”¯æ˜¯å¦å­˜åœ¨
+REM ÑéÖ¤·ÖÖ§ÊÇ·ñ´æÔÚ
 git branch --list !targetBranch! > temp_check_branch.txt 2>nul
 git branch -r --list origin/!targetBranch! >> temp_check_branch.txt 2>nul
 if exist temp_check_branch.txt (
@@ -108,51 +108,51 @@ if exist temp_check_branch.txt (
 
 if "!branchExists!"=="" (
     echo.
-    echo [è­¦å‘Š] åˆ†æ”¯ "!targetBranch!" ä¸å­˜åœ¨!
-    echo [æç¤º] æ˜¯å¦åˆ›å»ºæ–°åˆ†æ”¯ "!targetBranch!"? (y/n)
+    echo [¾¯¸æ] ·ÖÖ§ "!targetBranch!" ²»´æÔÚ!
+    echo [ÌáÊ¾] ÊÇ·ñ´´½¨ĞÂ·ÖÖ§ "!targetBranch!"? (y/n)
     set /p createBranch=
     if /i "!createBranch!"=="y" (
-        echo [ä¿¡æ¯] æ­£åœ¨åˆ›å»ºåˆ†æ”¯ "!targetBranch!"...
+        echo [ĞÅÏ¢] ÕıÔÚ´´½¨·ÖÖ§ "!targetBranch!"...
         git checkout -b !targetBranch! 2>nul
         if !errorlevel! neq 0 (
-            echo [é”™è¯¯] åˆ›å»ºåˆ†æ”¯å¤±è´¥!
+            echo [´íÎó] ´´½¨·ÖÖ§Ê§°Ü!
             pause
             exit /b 1
         )
-        echo [æˆåŠŸ] å·²åˆ›å»ºå¹¶åˆ‡æ¢åˆ°åˆ†æ”¯ "!targetBranch!"
+        echo [³É¹¦] ÒÑ´´½¨²¢ÇĞ»»µ½·ÖÖ§ "!targetBranch!"
     ) else (
-        echo [æç¤º] å·²å–æ¶ˆï¼Œè¯·é‡æ–°é€‰æ‹©åˆ†æ”¯
+        echo [ÌáÊ¾] ÒÑÈ¡Ïû£¬ÇëÖØĞÂÑ¡Ôñ·ÖÖ§
         echo.
         goto :select_branch
     )
 ) else (
-    REM åˆ‡æ¢åˆ°ç›®æ ‡åˆ†æ”¯
+    REM ÇĞ»»µ½Ä¿±ê·ÖÖ§
     if not "!currentBranch!"=="!targetBranch!" (
-        echo [ä¿¡æ¯] å½“å‰åˆ†æ”¯: !currentBranch!
-        echo [ä¿¡æ¯] æ­£åœ¨åˆ‡æ¢åˆ°åˆ†æ”¯: !targetBranch!
+        echo [ĞÅÏ¢] µ±Ç°·ÖÖ§: !currentBranch!
+        echo [ĞÅÏ¢] ÕıÔÚÇĞ»»µ½·ÖÖ§: !targetBranch!
         git checkout !targetBranch! 2>nul
         if !errorlevel! neq 0 (
-            echo [é”™è¯¯] åˆ‡æ¢åˆ†æ”¯å¤±è´¥!
+            echo [´íÎó] ÇĞ»»·ÖÖ§Ê§°Ü!
             pause
             exit /b 1
         )
-        echo [æˆåŠŸ] å·²åˆ‡æ¢åˆ°åˆ†æ”¯ "!targetBranch!"
+        echo [³É¹¦] ÒÑÇĞ»»µ½·ÖÖ§ "!targetBranch!"
         set currentBranch=!targetBranch!
     ) else (
-        echo [ä¿¡æ¯] å½“å‰å·²åœ¨åˆ†æ”¯ "!targetBranch!"
+        echo [ĞÅÏ¢] µ±Ç°ÒÑÔÚ·ÖÖ§ "!targetBranch!"
     )
 )
 echo.
 
-REM æ˜¾ç¤ºgitçŠ¶æ€
-echo [ä¿¡æ¯] æ£€æŸ¥gitçŠ¶æ€...
+REM ÏÔÊ¾git×´Ì¬
+echo [ĞÅÏ¢] ¼ì²égit×´Ì¬...
 echo ----------------------------------------
 git status --short 2>nul
 echo ----------------------------------------
 echo.
 
-REM æ£€æŸ¥æ˜¯å¦æœ‰æœªæäº¤çš„æ›´æ”¹
-echo [ä¿¡æ¯] æ£€æŸ¥æœªæäº¤çš„æ›´æ”¹...
+REM ¼ì²éÊÇ·ñÓĞÎ´Ìá½»µÄ¸ü¸Ä
+echo [ĞÅÏ¢] ¼ì²éÎ´Ìá½»µÄ¸ü¸Ä...
 git status --porcelain > temp_status.txt 2>nul
 if exist temp_status.txt (
     set /p hasChanges=<temp_status.txt
@@ -162,69 +162,69 @@ if exist temp_status.txt (
 )
 
 if "!hasChanges!"=="" (
-    echo [æç¤º] æ²¡æœ‰éœ€è¦æäº¤çš„æ›´æ”¹ï¼Œè·³è¿‡æäº¤æ­¥éª¤
+    echo [ÌáÊ¾] Ã»ÓĞĞèÒªÌá½»µÄ¸ü¸Ä£¬Ìø¹ıÌá½»²½Öè
     echo.
     goto :push_section
 )
 
-REM æ˜¾ç¤ºæ›´æ”¹çš„æ–‡ä»¶
-echo [ä¿¡æ¯] æ£€æµ‹åˆ°ä»¥ä¸‹æ›´æ”¹
+REM ÏÔÊ¾¸ü¸ÄµÄÎÄ¼ş
+echo [ĞÅÏ¢] ¼ì²âµ½ÒÔÏÂ¸ü¸Ä
 git status --short
 echo.
 
-REM æ·»åŠ æ‰€æœ‰æ›´æ”¹
-echo [ä¿¡æ¯] æ­£åœ¨æ·»åŠ æ›´æ”¹çš„æ–‡ä»¶...
+REM Ìí¼ÓËùÓĞ¸ü¸Ä
+echo [ĞÅÏ¢] ÕıÔÚÌí¼Ó¸ü¸ÄµÄÎÄ¼ş...
 git add . 2>nul
 if !errorlevel! neq 0 (
-    echo [é”™è¯¯] æ·»åŠ æ–‡ä»¶å¤±è´¥!
+    echo [´íÎó] Ìí¼ÓÎÄ¼şÊ§°Ü!
     pause
     exit /b 1
 )
-echo [æˆåŠŸ] æ–‡ä»¶å·²æ·»åŠ åˆ°æš‚å­˜åŒº
+echo [³É¹¦] ÎÄ¼şÒÑÌí¼Óµ½Ôİ´æÇø
 echo.
 
-REM è·å–æäº¤ä¿¡æ¯
-echo [æç¤º] è¯·è¾“å…¥æäº¤ä¿¡æ¯
+REM »ñÈ¡Ìá½»ĞÅÏ¢
+echo [ÌáÊ¾] ÇëÊäÈëÌá½»ĞÅÏ¢
 echo ----------------------------------------
-set /p commitMessage="æäº¤ä¿¡æ¯: "
+set /p commitMessage="Ìá½»ĞÅÏ¢: "
 echo ----------------------------------------
 if "!commitMessage!"=="" (
-    echo [é”™è¯¯] æäº¤ä¿¡æ¯ä¸èƒ½ä¸ºç©º!
+    echo [´íÎó] Ìá½»ĞÅÏ¢²»ÄÜÎª¿Õ!
     pause
     exit /b 1
 )
 echo.
 
-REM æäº¤æ›´æ”¹
-echo [ä¿¡æ¯] æ­£åœ¨æäº¤æ›´æ”¹åˆ°åˆ†æ”¯ "!targetBranch!"...
-echo [ä¿¡æ¯] æäº¤ä¿¡æ¯: !commitMessage!
+REM Ìá½»¸ü¸Ä
+echo [ĞÅÏ¢] ÕıÔÚÌá½»¸ü¸Äµ½·ÖÖ§ "!targetBranch!"...
+echo [ĞÅÏ¢] Ìá½»ĞÅÏ¢: !commitMessage!
 git commit -m "!commitMessage!" 2>nul
 
 if !errorlevel! neq 0 (
-    echo [é”™è¯¯] æäº¤å¤±è´¥!
+    echo [´íÎó] Ìá½»Ê§°Ü!
     pause
     exit /b 1
 )
 
-echo [æˆåŠŸ] æäº¤æˆåŠŸ!
+echo [³É¹¦] Ìá½»³É¹¦!
 echo.
 
 :push_section
-REM æ¨é€åˆ°è¿œç¨‹
+REM ÍÆËÍµ½Ô¶³Ì
 echo ========================================
-echo æ¨é€åˆ°è¿œç¨‹ä»“åº“
+echo ÍÆËÍµ½Ô¶³Ì²Ö¿â
 echo ========================================
 echo.
-echo [ä¿¡æ¯] ç›®æ ‡åˆ†æ”¯: !targetBranch!
-echo [ä¿¡æ¯] è¿œç¨‹ä»“åº“ä¿¡æ¯:
+echo [ĞÅÏ¢] Ä¿±ê·ÖÖ§: !targetBranch!
+echo [ĞÅÏ¢] Ô¶³Ì²Ö¿âĞÅÏ¢:
 git remote -v 2>nul
 echo.
 
-set /p push="æ˜¯å¦æ¨é€åˆ°è¿œç¨‹åˆ†æ”¯ origin/!targetBranch!? (y/n): "
+set /p push="ÊÇ·ñÍÆËÍµ½Ô¶³Ì·ÖÖ§ origin/!targetBranch!? (y/n): "
 if /i not "!push!"=="y" (
     echo.
-    echo [æç¤º] å·²å–æ¶ˆæ¨é€
-    echo [æç¤º] ä½ å¯ä»¥ç¨åä½¿ç”¨ä»¥ä¸‹å‘½ä»¤æ‰‹åŠ¨æ¨é€:
+    echo [ÌáÊ¾] ÒÑÈ¡ÏûÍÆËÍ
+    echo [ÌáÊ¾] Äã¿ÉÒÔÉÔºóÊ¹ÓÃÒÔÏÂÃüÁîÊÖ¶¯ÍÆËÍ:
     echo   git push origin !targetBranch!
     echo.
     pause
@@ -232,54 +232,54 @@ if /i not "!push!"=="y" (
 )
 
 echo.
-echo [ä¿¡æ¯] æ­£åœ¨å‡†å¤‡SSHè¿æ¥...
+echo [ĞÅÏ¢] ÕıÔÚ×¼±¸SSHÁ¬½Ó...
 echo ----------------------------------------
 
-REM ç¡®ä¿SSHå¯†é’¥å·²æ·»åŠ åˆ°agent
+REM È·±£SSHÃÜÔ¿ÒÑÌí¼Óµ½agent
 set "SSH_KEY=%USERPROFILE%\.ssh\id_rsa_account"
 if exist "!SSH_KEY!" (
-    echo [ä¿¡æ¯] æ‰¾åˆ°SSHå¯†é’¥: !SSH_KEY!
-    echo [ä¿¡æ¯] æ­£åœ¨å°†å¯†é’¥æ·»åŠ åˆ°SSH agent...
+    echo [ĞÅÏ¢] ÕÒµ½SSHÃÜÔ¿: !SSH_KEY!
+    echo [ĞÅÏ¢] ÕıÔÚ½«ÃÜÔ¿Ìí¼Óµ½SSH agent...
     ssh-add "!SSH_KEY!" 2>nul
     if !errorlevel! equ 0 (
-        echo [æˆåŠŸ] SSHå¯†é’¥å·²æ·»åŠ åˆ°agent
+        echo [³É¹¦] SSHÃÜÔ¿ÒÑÌí¼Óµ½agent
     ) else (
-        echo [è­¦å‘Š] æ·»åŠ å¯†é’¥åˆ°agentå¤±è´¥ï¼Œå°†å°è¯•ç›´æ¥ä½¿ç”¨å¯†é’¥æ–‡ä»¶
+        echo [¾¯¸æ] Ìí¼ÓÃÜÔ¿µ½agentÊ§°Ü£¬½«³¢ÊÔÖ±½ÓÊ¹ÓÃÃÜÔ¿ÎÄ¼ş
     )
     
     echo.
-    echo [ä¿¡æ¯] æ­£åœ¨æµ‹è¯•SSHè¿æ¥...
+    echo [ĞÅÏ¢] ÕıÔÚ²âÊÔSSHÁ¬½Ó...
     ssh -T git@gitee.com > temp_ssh_test.txt 2>&1
     findstr /C:"Hi " temp_ssh_test.txt >nul
     if !errorlevel! equ 0 (
-        echo [æˆåŠŸ] SSHè¿æ¥æ­£å¸¸
+        echo [³É¹¦] SSHÁ¬½ÓÕı³£
         type temp_ssh_test.txt | findstr /C:"Hi "
     ) else (
         findstr /C:"successfully authenticated" temp_ssh_test.txt >nul
         if !errorlevel! equ 0 (
-            echo [æˆåŠŸ] SSHè¿æ¥æ­£å¸¸
+            echo [³É¹¦] SSHÁ¬½ÓÕı³£
         ) else (
-            echo [è­¦å‘Š] SSHè¿æ¥æµ‹è¯•æœªé€šè¿‡ï¼Œä½†å°†ç»§ç»­å°è¯•æ¨é€
+            echo [¾¯¸æ] SSHÁ¬½Ó²âÊÔÎ´Í¨¹ı£¬µ«½«¼ÌĞø³¢ÊÔÍÆËÍ
             type temp_ssh_test.txt
         )
     )
     del temp_ssh_test.txt 2>nul
 ) else (
-    echo [è­¦å‘Š] æœªæ‰¾åˆ°SSHå¯†é’¥æ–‡ä»¶ï¼Œå°†ä½¿ç”¨é»˜è®¤SSHé…ç½®
+    echo [¾¯¸æ] Î´ÕÒµ½SSHÃÜÔ¿ÎÄ¼ş£¬½«Ê¹ÓÃÄ¬ÈÏSSHÅäÖÃ
 )
 echo ----------------------------------------
 echo.
 
-REM æ‰§è¡Œæ¨é€
-echo [ä¿¡æ¯] æ­£åœ¨æ¨é€ä»£ç åˆ°è¿œç¨‹åˆ†æ”¯ origin/!targetBranch!...
+REM Ö´ĞĞÍÆËÍ
+echo [ĞÅÏ¢] ÕıÔÚÍÆËÍ´úÂëµ½Ô¶³Ì·ÖÖ§ origin/!targetBranch!...
 echo ----------------------------------------
 
 if exist "!SSH_KEY!" (
-    REM ä½¿ç”¨SSHå¯†é’¥æ–‡ä»¶æ¨é€ï¼ˆæ­£ç¡®å¤„ç†ä¸­æ–‡è·¯å¾„ï¼‰
-    powershell -NoProfile -Command "$sshKeyPath = Join-Path $env:USERPROFILE '.ssh\id_rsa_account'; $sshKey = (Resolve-Path $sshKeyPath).Path; $env:GIT_SSH_COMMAND = \"ssh -i `\"$sshKey`\"\"; cd 'E:\PyCharm\PythonProject\WebHarvest'; $branch = '!targetBranch!'; Write-Host \"[æ‰§è¡Œ] git push origin $branch\" -ForegroundColor Yellow; git push origin $branch; $exitCode = $LASTEXITCODE; $env:GIT_SSH_COMMAND = $null; exit $exitCode"
+    REM Ê¹ÓÃSSHÃÜÔ¿ÎÄ¼şÍÆËÍ£¨ÕıÈ·´¦ÀíÖĞÎÄÂ·¾¶£©
+    powershell -NoProfile -Command "$sshKeyPath = Join-Path $env:USERPROFILE '.ssh\id_rsa_account'; $sshKey = (Resolve-Path $sshKeyPath).Path; $env:GIT_SSH_COMMAND = \"ssh -i `\"$sshKey`\"\"; cd 'E:\PyCharm\PythonProject\WebHarvest'; $branch = '!targetBranch!'; Write-Host \"[Ö´ĞĞ] git push origin $branch\" -ForegroundColor Yellow; git push origin $branch; $exitCode = $LASTEXITCODE; $env:GIT_SSH_COMMAND = $null; exit $exitCode"
 ) else (
-    REM ä½¿ç”¨é»˜è®¤SSHé…ç½®æ¨é€
-    echo [ä¿¡æ¯] ä½¿ç”¨é»˜è®¤SSHé…ç½®æ¨é€...
+    REM Ê¹ÓÃÄ¬ÈÏSSHÅäÖÃÍÆËÍ
+    echo [ĞÅÏ¢] Ê¹ÓÃÄ¬ÈÏSSHÅäÖÃÍÆËÍ...
     git push origin !targetBranch!
 )
 
@@ -290,44 +290,44 @@ echo ----------------------------------------
 if !PUSH_RESULT! equ 0 (
     echo.
     echo ========================================
-    echo [æˆåŠŸ] æ¨é€å®Œæˆ!
+    echo [³É¹¦] ÍÆËÍÍê³É!
     echo ========================================
     echo.
-    echo [ä¿¡æ¯] æ¨é€è¯¦æƒ…:
-    echo   åˆ†æ”¯: !targetBranch!
+    echo [ĞÅÏ¢] ÍÆËÍÏêÇé:
+    echo   ·ÖÖ§: !targetBranch!
     git log --oneline -1 2>nul
     echo.
-    echo [æç¤º] ä½ å¯ä»¥åœ¨Giteeä¸ŠæŸ¥çœ‹æ›´æ–°:
+    echo [ÌáÊ¾] Äã¿ÉÒÔÔÚGiteeÉÏ²é¿´¸üĞÂ:
     echo   https://gitee.com/fanchenn/web-harvest
     echo.
 ) else (
     echo.
     echo ========================================
-    echo [é”™è¯¯] æ¨é€å¤±è´¥!
+    echo [´íÎó] ÍÆËÍÊ§°Ü!
     echo ========================================
     echo.
-    echo [æç¤º] å¸¸è§é—®é¢˜æ’æŸ¥:
+    echo [ÌáÊ¾] ³£¼ûÎÊÌâÅÅ²é:
     echo.
-    echo 1. SSHå¯†é’¥é—®é¢˜:
-    echo    - è¿è¡Œ: ssh -T git@gitee.com
-    echo    - æ£€æŸ¥: https://gitee.com/profile/sshkeys
+    echo 1. SSHÃÜÔ¿ÎÊÌâ:
+    echo    - ÔËĞĞ: ssh -T git@gitee.com
+    echo    - ¼ì²é: https://gitee.com/profile/sshkeys
     echo.
-    echo 2. æƒé™é—®é¢˜:
-    echo    - ç¡®è®¤ä½ æœ‰è¯¥ä»“åº“çš„æ¨é€æƒé™
-    echo    - æ£€æŸ¥ä»“åº“è®¿é—®æƒé™è®¾ç½®
+    echo 2. È¨ÏŞÎÊÌâ:
+    echo    - È·ÈÏÄãÓĞ¸Ã²Ö¿âµÄÍÆËÍÈ¨ÏŞ
+    echo    - ¼ì²é²Ö¿â·ÃÎÊÈ¨ÏŞÉèÖÃ
     echo.
-    echo 3. ç½‘ç»œé—®é¢˜:
-    echo    - æ£€æŸ¥ç½‘ç»œè¿æ¥æ˜¯å¦æ­£å¸¸
-    echo    - å¦‚éœ€è¦å¯å°è¯•ä½¿ç”¨VPNæˆ–ä»£ç†
+    echo 3. ÍøÂçÎÊÌâ:
+    echo    - ¼ì²éÍøÂçÁ¬½ÓÊÇ·ñÕı³£
+    echo    - ÈçĞèÒª¿É³¢ÊÔÊ¹ÓÃVPN»ò´úÀí
     echo.
-    echo 4. è¿œç¨‹ä»“åº“åœ°å€:
-    echo    - å½“å‰è¿œç¨‹åœ°å€:
+    echo 4. Ô¶³Ì²Ö¿âµØÖ·:
+    echo    - µ±Ç°Ô¶³ÌµØÖ·:
     git remote -v 2>nul
     echo.
-    echo 5. åˆ†æ”¯é—®é¢˜:
-    echo    - ç¡®è®¤è¿œç¨‹åˆ†æ”¯å­˜åœ¨æˆ–ä½¿ç”¨é¦–æ¬¡æ¨é€: git push -u origin !targetBranch!
+    echo 5. ·ÖÖ§ÎÊÌâ:
+    echo    - È·ÈÏÔ¶³Ì·ÖÖ§´æÔÚ»òÊ¹ÓÃÊ×´ÎÍÆËÍ: git push -u origin !targetBranch!
     echo.
-    echo [æç¤º] ä½ å¯ä»¥ç¨åé‡è¯•æ¨é€:
+    echo [ÌáÊ¾] Äã¿ÉÒÔÉÔºóÖØÊÔÍÆËÍ:
     echo   git push origin !targetBranch!
     echo.
 )

@@ -1,36 +1,36 @@
 @echo off
-chcp 65001 >nul 2>&1
+chcp 437 >nul 2>&1
 setlocal enabledelayedexpansion
 
 echo ========================================
-echo Git 提交和推送脚本 - test分支
+echo Git Commit & Push Script - test branch
 echo ========================================
 echo.
 
-REM 切换到项目目录
+REM Switch to project directory
 cd /d "E:\PyCharm\PythonProject\WebHarvest" 2>nul
 if !errorlevel! neq 0 (
-    echo [错误] 无法切换到项目目录!
+    echo [ERROR] Failed to switch to project directory!
     pause
     exit /b 1
 )
 
-REM 检查是否是git仓库
+REM Check if it's a git repository
 if not exist ".git" (
-    echo [错误] 当前目录不是git仓库!
+    echo [ERROR] Current directory is not a git repository!
     pause
     exit /b 1
 )
 
-REM 显示git状态
-echo [信息] 检查git状态...
+REM Show git status
+echo [INFO] Checking git status...
 echo ----------------------------------------
 git status --short 2>nul
 echo ----------------------------------------
 echo.
 
-REM 切换到test分支
-echo [信息] 检查当前分支...
+REM Switch to test branch
+echo [INFO] Checking current branch...
 git branch --show-current > temp_branch.txt 2>nul
 if exist temp_branch.txt (
     set /p currentBranch=<temp_branch.txt
@@ -40,155 +40,150 @@ if exist temp_branch.txt (
 )
 
 if not "!currentBranch!"=="test" (
-    echo [信息] 当前分支: !currentBranch!
-    echo [信息] 正在切换到test分支...
+    echo [INFO] Current branch: !currentBranch!
+    echo [INFO] Switching to test branch...
     git branch -a 2>nul | findstr /C:"test" >nul
     if !errorlevel! equ 0 (
         git checkout test 2>nul
-        echo [成功] 已切换到test分支
+        echo [SUCCESS] Switched to test branch
     ) else (
-        echo [信息] test分支不存在，基于dev创建test分支...
+        echo [INFO] test branch not exist, create from dev...
         git checkout dev 2>nul
         git pull origin dev 2>nul
         git checkout -b test 2>nul
-        echo [成功] 已创建并切换到test分支
+        echo [SUCCESS] Created and switched to test branch
     )
 ) else (
-    echo [信息] 当前已在test分支
+    echo [INFO] Already on test branch
 )
 echo.
 
-REM 检查是否有未提交的更改
-echo [信息] 检查未提交的更改...
-git status --porcelain > temp_status.txt 2>nul
-if exist temp_status.txt (
-    REM 修复：原脚本读取单行可能漏判，改用循环检测
-    set "hasChanges="
-    for /f "delims=" %%a in (temp_status.txt) do set hasChanges=1
-    del temp_status.txt 2>nul
+REM Pull remote test branch first (avoid non-fast-forward error)
+echo [INFO] Pulling latest code from remote test branch...
+git pull origin test 2>nul
+if !errorlevel! equ 0 (
+    echo [SUCCESS] Pulled latest code from remote test branch
 ) else (
-    set hasChanges=
+    echo [WARNING] No remote test branch (first push)
 )
+echo.
+
+REM Check uncommitted changes
+echo [INFO] Checking uncommitted changes...
+git status --porcelain > temp_status.txt 2>nul
+set "hasChanges="
+for /f "delims=" %%a in (temp_status.txt) do set hasChanges=1
+del temp_status.txt 2>nul
 
 if not defined hasChanges (
-    echo [提示] 没有需要提交的更改，跳过提交步骤
+    echo [INFO] No uncommitted changes, skip commit
     echo.
     goto :push_section
 )
 
-REM 显示更改的文件
-echo [信息] 检测到以下更改
+REM Show changed files
+echo [INFO] Detected changes:
 git status --short
 echo.
 
-REM 添加所有更改
-echo [信息] 正在添加更改的文件...
+REM Add all changes
+echo [INFO] Adding changed files...
 git add . 2>nul
 if !errorlevel! neq 0 (
-    echo [错误] 添加文件失败!
+    echo [ERROR] Failed to add files!
     pause
     exit /b 1
 )
-echo [成功] 文件已添加到暂存区
+echo [SUCCESS] Files added to staging area
 echo.
 
-REM 获取提交信息
-echo [提示] 请输入提交信息
+REM Get commit message
+echo [INFO] Enter commit message
 echo ----------------------------------------
-set /p commitMessage="提交信息: "
+set /p commitMessage="Commit message: "
 echo ----------------------------------------
 if "!commitMessage!"=="" (
-    echo [错误] 提交信息不能为空!
+    echo [ERROR] Commit message cannot be empty!
     pause
     exit /b 1
 )
 echo.
 
-REM 提交更改
-echo [信息] 正在提交更改...
-echo [信息] 提交信息: !commitMessage!
+REM Commit changes
+echo [INFO] Committing changes...
+echo [INFO] Commit message: !commitMessage!
 git commit -m "!commitMessage!" 2>nul
 
 if !errorlevel! neq 0 (
-    echo [错误] 提交失败!
+    echo [ERROR] Commit failed!
     pause
     exit /b 1
 )
 
-echo [成功] 提交成功!
+echo [SUCCESS] Commit successful!
 echo.
 
 :push_section
-REM 推送到远程test分支
+REM Push to remote test branch
 echo ========================================
-echo 推送到远程仓库 - test分支
+echo Push to remote repository - test branch
 echo ========================================
 echo.
-echo [信息] 远程仓库信息:
+echo [INFO] Remote repository info:
 git remote -v 2>nul
 echo.
 
-set /p push="是否推送到远程test分支? (y/n): "
+set /p push="Push to remote test branch? (y/n): "
 if /i not "!push!"=="y" (
     echo.
-    echo [提示] 已取消推送
-    echo [提示] 你可以稍后使用以下命令手动推送:
-    echo   git push origin test
+    echo [INFO] Push cancelled
+    echo [INFO] Manual push command: git push origin test
     echo.
     pause
     exit /b 0
 )
 
 echo.
-echo [信息] 正在准备SSH连接...
+echo [INFO] Preparing SSH connection...
 echo ----------------------------------------
 
-REM 确保SSH密钥已添加到agent
+REM Add SSH key to agent
 set "SSH_KEY=%USERPROFILE%\.ssh\id_rsa_account"
 if exist "!SSH_KEY!" (
-    echo [信息] 找到SSH密钥: !SSH_KEY!
-    echo [信息] 正在将密钥添加到SSH agent...
+    echo [INFO] Found SSH key: !SSH_KEY!
+    echo [INFO] Adding SSH key to agent...
     ssh-add "!SSH_KEY!" 2>nul
     if !errorlevel! equ 0 (
-        echo [成功] SSH密钥已添加到agent
+        echo [SUCCESS] SSH key added to agent
     ) else (
-        echo [警告] 添加密钥到agent失败，将尝试直接使用密钥文件
+        echo [WARNING] Failed to add SSH key to agent
     )
     
     echo.
-    echo [信息] 正在测试SSH连接...
+    echo [INFO] Testing SSH connection...
     ssh -T git@gitee.com > temp_ssh_test.txt 2>&1
     findstr /C:"Hi " temp_ssh_test.txt >nul
     if !errorlevel! equ 0 (
-        echo [成功] SSH连接正常
+        echo [SUCCESS] SSH connection normal
         type temp_ssh_test.txt | findstr /C:"Hi "
     ) else (
-        findstr /C:"successfully authenticated" temp_ssh_test.txt >nul
-        if !errorlevel! equ 0 (
-            echo [成功] SSH连接正常
-        ) else (
-            echo [警告] SSH连接测试未通过，但将继续尝试推送
-            type temp_ssh_test.txt
-        )
+        echo [WARNING] SSH connection test failed, continue push
     )
     del temp_ssh_test.txt 2>nul
 ) else (
-    echo [警告] 未找到SSH密钥文件，将使用默认SSH配置
+    echo [WARNING] SSH key file not found
 )
 echo ----------------------------------------
 echo.
 
-REM 执行推送（适配test分支，首次推送自动加-u）
-echo [信息] 正在推送代码到远程test分支...
-echo [信息] 目标: origin/test
+REM Execute push (with -u for first push)
+echo [INFO] Pushing code to remote test branch...
+echo [INFO] Target: origin/test
 echo ----------------------------------------
 
 if exist "!SSH_KEY!" (
-    REM 使用SSH密钥文件推送（首次推送加-u）
-    powershell -NoProfile -Command "$sshKey = (Resolve-Path '%SSH_KEY%').Path; ssh-add '$sshKey' 2>&1 | Out-Null; $env:GIT_SSH_COMMAND = \"ssh -i `\"$sshKey`\"\"; cd 'E:\PyCharm\PythonProject\WebHarvest'; Write-Host '[执行] git push -u origin test' -ForegroundColor Yellow; git push -u origin test; $exitCode = $LASTEXITCODE; $env:GIT_SSH_COMMAND = $null; exit $exitCode"
+    powershell -NoProfile -Command "$sshKey = (Resolve-Path '%SSH_KEY%').Path; $env:GIT_SSH_COMMAND = 'ssh -i `\"$sshKey`\"'; cd 'E:\PyCharm\PythonProject\WebHarvest'; git push -u origin test; exit $LASTEXITCODE"
 ) else (
-    REM 使用默认SSH配置推送（首次推送加-u）
-    echo [信息] 使用默认SSH配置推送...
     git push -u origin test
 )
 
@@ -199,44 +194,24 @@ echo ----------------------------------------
 if !PUSH_RESULT! equ 0 (
     echo.
     echo ========================================
-    echo [成功] 推送完成!
+    echo [SUCCESS] Push completed!
     echo ========================================
     echo.
-    echo [信息] 推送详情:
+    echo [INFO] Latest commit:
     git log --oneline -1 2>nul
     echo.
-    echo [提示] 你可以在Gitee上查看更新:
-    echo   https://gitee.com/fanchenn/web-harvest/tree/test
+    echo [INFO] View on Gitee: https://gitee.com/fanchenn/web-harvest/tree/test
     echo.
 ) else (
     echo.
     echo ========================================
-    echo [错误] 推送失败!
+    echo [ERROR] Push failed!
     echo ========================================
     echo.
-    echo [提示] 常见问题排查:
-    echo.
-    echo 1. SSH密钥问题:
-    echo    - 运行: ssh -T git@gitee.com
-    echo    - 检查: https://gitee.com/profile/sshkeys
-    echo.
-    echo 2. 权限问题:
-    echo    - 确认你有该仓库的推送权限
-    echo    - 检查仓库访问权限设置
-    echo.
-    echo 3. 网络问题:
-    echo    - 检查网络连接是否正常
-    echo    - 如需要可尝试使用VPN或代理
-    echo.
-    echo 4. 远程仓库地址:
-    git remote -v 2>nul
-    echo.
-    echo 5. 分支问题:
-    echo    - 确认远程test分支存在（首次推送需加 -u）
-    echo    - 手动命令: git push -u origin test
-    echo.
-    echo [提示] 你可以稍后重试推送:
-    echo   git push origin test
+    echo [TROUBLESHOOTING]
+    echo 1. SSH key issue: Run 'ssh -T git@gitee.com'
+    echo 2. Pull remote changes first: 'git pull origin test'
+    echo 3. Manual push command: 'git push -u origin test'
     echo.
 )
 
