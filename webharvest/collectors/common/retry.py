@@ -3,7 +3,8 @@ from __future__ import annotations
 import random
 import time
 from functools import wraps
-from typing import Callable, Iterable, Optional, Tuple, Type
+from collections.abc import Callable
+from typing import Type
 
 
 def retry(
@@ -11,8 +12,8 @@ def retry(
     max_retries: int = 3,
     base_backoff_s: float = 0.5,
     max_backoff_s: float = 8.0,
-    retry_exceptions: Tuple[Type[BaseException], ...] = (Exception,),
-    on_error: Optional[Callable[[BaseException, int], None]] = None,
+    retry_exceptions: tuple[Type[BaseException], ...] = (Exception,),
+    on_error: Callable[[BaseException, int], None] | None = None,
 ):
     """
     通用重试装饰器（指数退避 + 抖动）
@@ -38,5 +39,6 @@ def retry(
         return wrapper
 
     return deco
+
 
 

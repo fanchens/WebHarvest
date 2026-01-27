@@ -5,7 +5,6 @@ Cookie管理模块
 
 import time
 import json
-from typing import List, Dict, Optional
 from urllib.parse import urlparse
 
 from .cookie_storage import CookieStorage
@@ -92,8 +91,11 @@ class CookieManager:
                 # 过滤出属于当前域名的Cookie
                 domain_cookies = [
                     cookie for cookie in cookies
-                    if domain in cookie.get('domain', '')
+                    if domain in cookie.get("domain", "")
                 ]
+
+                if verbose:
+                    print(f"[CookieManager] URL={url} 域名={domain} 抓到 Cookie 总数={len(cookies)}，匹配当前域名的={len(domain_cookies)}")
 
                 if domain_cookies:
                     success = self.cookie_storage.save_cookies(domain, domain_cookies, verbose=verbose)
@@ -194,7 +196,7 @@ class CookieManager:
         domain = self.extract_domain_from_url(url)
         return self.cookie_storage.delete_cookies(domain)
 
-    def get_login_status(self, url: str) -> Dict:
+    def get_login_status(self, url: str) -> dict:
         """
         获取登录状态信息
 
@@ -202,7 +204,7 @@ class CookieManager:
             url: 页面URL
 
         Returns:
-            Dict: 登录状态信息
+            dict: 登录状态信息
         """
         domain = self.extract_domain_from_url(url)
         cookie_info = self.cookie_storage.get_cookie_info(domain)

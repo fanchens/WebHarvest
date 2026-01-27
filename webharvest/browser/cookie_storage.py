@@ -6,16 +6,15 @@ Cookie存储管理模块
 import json
 import time
 from pathlib import Path
-from typing import List, Dict, Optional
 from datetime import datetime
 import hashlib
 
 
-def _normalize_cookies_for_compare(cookies: List[Dict]) -> List[Dict]:
+def _normalize_cookies_for_compare(cookies: list[dict]) -> list[dict]:
     """
     规范化 Cookie 用于对比（避免字段顺序/无关字段导致误判“变化”）
     """
-    normalized: List[Dict] = []
+    normalized: list[dict] = []
     for c in cookies or []:
         normalized.append(
             {
@@ -31,7 +30,7 @@ def _normalize_cookies_for_compare(cookies: List[Dict]) -> List[Dict]:
     return normalized
 
 
-def _cookies_fingerprint(cookies: List[Dict]) -> str:
+def _cookies_fingerprint(cookies: list[dict]) -> str:
     payload = json.dumps(_normalize_cookies_for_compare(cookies), ensure_ascii=False, separators=(",", ":"), sort_keys=True)
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
@@ -39,7 +38,7 @@ def _cookies_fingerprint(cookies: List[Dict]) -> str:
 class CookieStorage:
     """Cookie存储管理类"""
 
-    def __init__(self, storage_dir: Optional[Path] = None):
+    def __init__(self, storage_dir: Path | None = None):
         """
         初始化Cookie存储
 
@@ -55,7 +54,7 @@ class CookieStorage:
         # 确保目录存在
         self.storage_dir.mkdir(parents=True, exist_ok=True)
 
-    def save_cookies(self, domain: str, cookies: List[Dict], *, verbose: bool = True) -> bool:
+    def save_cookies(self, domain: str, cookies: list[dict], *, verbose: bool = True) -> bool:
         """
         保存指定域名的Cookie
 
@@ -100,7 +99,7 @@ class CookieStorage:
             print(f"保存Cookie失败: {e}")
             return False
 
-    def load_cookies(self, domain: str, *, verbose: bool = True) -> List[Dict]:
+    def load_cookies(self, domain: str, *, verbose: bool = True) -> list[dict]:
         """
         加载指定域名的Cookie
 
@@ -108,7 +107,7 @@ class CookieStorage:
             domain: 域名，如 'www.baidu.com'
 
         Returns:
-            List[Dict]: Cookie列表
+            list[dict]: Cookie列表
         """
         try:
             file_path = self.storage_dir / f"{domain}.json"
@@ -144,10 +143,19 @@ class CookieStorage:
 
         current_time = time.time()
 
-        # 检查是否有未过期的Cookie
+        # 检查是否有“看起来还有效”的 Cookie：
+        # - 如果带 expires/expirationDate 且大于当前时间 -> 有效
+        # - 如果没有任何过期时间字段（典型会话 Cookie） -> 也视为有效
         for cookie in cookies:
-            expires = cookie.get('expires', cookie.get('expirationDate', 0))
-            if expires > current_time:
+            expires = cookie.get("expires", cookie.get("expirationDate"))
+            if not expires:
+                # 没有过期时间，通常是会话 Cookie，默认认为还有效
+                return True
+            try:
+                if float(expires) > current_time:
+                    return True
+            except Exception:
+                # 非法的 expires 值，保守起见也认为有效，交给站点自己判断
                 return True
 
         return False
@@ -177,12 +185,12 @@ class CookieStorage:
             print(f"删除Cookie失败: {e}")
             return False
 
-    def list_domains(self) -> List[str]:
+    def list_domains(self) -> list[str]:
         """
         列出所有保存了Cookie的域名
 
         Returns:
-            List[str]: 域名列表
+            list[str]: 域名列表
         """
         domains = []
         try:
@@ -194,7 +202,7 @@ class CookieStorage:
 
         return domains
 
-    def get_cookie_info(self, domain: str) -> Optional[Dict]:
+    def get_cookie_info(self, domain: str) -> dict | None:
         """
         获取指定域名的Cookie信息（包括元数据）
 
@@ -202,7 +210,7 @@ class CookieStorage:
             domain: 域名
 
         Returns:
-            Optional[Dict]: Cookie信息，包含元数据
+            dict | None: Cookie信息，包含元数据
         """
         try:
             file_path = self.storage_dir / f"{domain}.json"

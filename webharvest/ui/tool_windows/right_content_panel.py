@@ -3,7 +3,7 @@
 管理右侧内容的显示和切换，支持不同类型的页面内容
 """
 
-from typing import Optional
+from __future__ import annotations
 
 from PySide6.QtWidgets import (
     QWidget,
@@ -14,15 +14,16 @@ from PySide6.QtWidgets import (
     QSizePolicy,
 )
 
-from .component.data_table_widget import DataTableWidget
-from .browser_login_page import BrowserLoginPage
+from .site_profiles import get_site_profile
 
 
 class RightContentPanel(QWidget):
     """右侧内容面板组件"""
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, *, tool_name: str = "", site_key: str = ""):
         super().__init__(parent)
+        self._tool_name = tool_name
+        self._site_key = site_key
 
         # 设置白色背景
         self.setStyleSheet("QWidget { background-color: #ffffff; }")
@@ -33,7 +34,7 @@ class RightContentPanel(QWidget):
         self.layout.setSpacing(20)
 
         # 当前显示的组件
-        self.current_content: Optional[QWidget] = None
+        self.current_content: QWidget | None = None
 
         # 初始化显示默认内容
         self.show_default_content()
@@ -61,91 +62,49 @@ class RightContentPanel(QWidget):
             self.current_content.deleteLater()
             self.current_content = None
 
-    def _create_content(self, content_type: str) -> Optional[QWidget]:
+    def _create_content(self, content_type: str) -> QWidget | None:
         """创建指定类型的内容
 
         注意：这里的键必须和 LeftMenuPanel.DEFAULT_MENU_ITEMS 中的文本完全一致，
         否则会因为匹配不到而回退到默认的“欢迎使用”页面。
         """
-        content_map = {
-            "作品列表": self._create_works_list,
-            "主页提取": self._create_homepage_extraction,
-            "单作品提取": self._create_single_work_extraction,
-            "关键词提取": self._create_keyword_extraction,
-            "我的主页提取": self._create_my_homepage_extraction,
-            "万能浏览提取": self._create_universal_browse_extraction,
-            "下载设置": self._create_download_settings,
-            "VIP中心": self._create_vip_center,
-            # 与左侧菜单文本保持一致：浏览器_登录
-            "浏览器_登录": self._create_browser_login_page,
-            "软件设置": self._create_software_settings,
-            "推送消息": self._create_push_messages,
-            "语音转写文案": self._create_voice_transcription,
-            "使用教程": self._create_tutorial,
-        }
+        profile = get_site_profile(self._infer_site_key())
+        # 用 title 找到该菜单对应的 page_type
+        page_type = None
+        for item in profile["menu_items"]:
+            if item.get("title") == content_type:
+                page_type = item.get("page_type")
+                break
+        if not page_type:
+            return self._create_default_content()
 
-        creator = content_map.get(content_type, self._create_default_content)
-        return creator()
+        factory = profile["page_factories"].get(page_type)
+        if not factory:
+            return self._create_default_content()
 
-    def _create_works_list(self) -> QWidget:
-        """创建作品列表内容"""
-        container = QWidget()
-        layout = QVBoxLayout(container)
-        layout.setContentsMargins(0, 0, 0, 0)
+        return factory(parent=self, tool_name=self._tool_name, site_key=self._infer_site_key())
 
-        # 创建表格
-        table = DataTableWidget()
-        layout.addWidget(table)
+    def _infer_site_key(self) -> str:
+        """返回站点 key（优先使用配置传入的 site_key，避免依赖中文名称判断）"""
+        if self._site_key:
+            return self._site_key
+        # 兼容：历史路径未传 site_key 时，才回退到从名字推断
+        t = (self._tool_name or "").lower()
+        if "douyin" in t:
+            return "douyin"
+        if "xiaohongshu" in t or "xhs" in t:
+            return "xiaohongshu"
+        if "kuaishou" in t:
+            return "kuaishou"
+        if "tk" in t or "tiktok" in t:
+            return "tiktok"
+        if "bili" in t:
+            return "bilibili"
+        if "youtube" in t:
+            return "youtube"
+        return "default"
 
-        return container
-
-    def _create_homepage_extraction(self) -> QWidget:
-        """创建主页提取内容"""
-        return self._create_text_content("主页提取功能", "这里可以配置主页内容的提取设置")
-
-    def _create_single_work_extraction(self) -> QWidget:
-        """创建单作品提取内容"""
-        return self._create_text_content("单作品提取功能", "输入作品ID或URL进行单个作品提取")
-
-    def _create_keyword_extraction(self) -> QWidget:
-        """创建关键词提取内容"""
-        return self._create_text_content("关键词提取功能", "输入关键词进行内容搜索和提取")
-
-    def _create_my_homepage_extraction(self) -> QWidget:
-        """创建我的主页提取内容"""
-        return self._create_text_content("我的主页提取功能", "提取当前登录用户的主页内容")
-
-    def _create_universal_browse_extraction(self) -> QWidget:
-        """创建万能浏览提取内容"""
-        return self._create_text_content("万能浏览提取功能", "支持多种网站的内容自动提取")
-
-    def _create_download_settings(self) -> QWidget:
-        """创建下载设置内容"""
-        return self._create_text_content("下载设置", "配置下载路径、并发数、速度限制等")
-
-    def _create_vip_center(self) -> QWidget:
-        """创建VIP中心内容"""
-        return self._create_text_content("VIP中心", "会员特权、付费功能、升级服务")
-
-    def _create_browser_login_page(self) -> QWidget:
-        """创建浏览器登录页面"""
-        return BrowserLoginPage()
-
-    def _create_software_settings(self) -> QWidget:
-        """创建软件设置内容"""
-        return self._create_text_content("软件设置", "界面主题、语言、快捷键等系统配置")
-
-    def _create_push_messages(self) -> QWidget:
-        """创建推送消息内容"""
-        return self._create_text_content("推送消息", "配置消息推送渠道和通知设置")
-
-    def _create_voice_transcription(self) -> QWidget:
-        """创建语音转写内容"""
-        return self._create_text_content("语音转写文案", "将语音转换为文字内容")
-
-    def _create_tutorial(self) -> QWidget:
-        """创建使用教程内容"""
-        return self._create_text_content("使用教程", "查看详细的使用指南和帮助文档")
+    # 旧的“每个菜单一个 _create_xxx”已迁移到 pages/ 目录，由 site_profiles.py 统一管理。
 
     def _create_text_content(self, title: str, description: str) -> QWidget:
         """创建文本内容（通用方法）"""
@@ -200,7 +159,7 @@ class RightContentPanel(QWidget):
         else:  # auto
             self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
 
-    def get_current_content_type(self) -> Optional[str]:
+    def get_current_content_type(self) -> str | None:
         """获取当前显示的内容类型"""
         # 这里可以根据当前显示的内容返回相应的类型
         # 暂时返回None，具体实现可以根据需要添加

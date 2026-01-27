@@ -27,12 +27,14 @@ from webharvest.ui.main_window.config.styles_config import (
 class ToolCard(QFrame):
     """工具卡片 - 支持2列布局的自动宽度计算"""
     
-    def __init__(self, name: str, description: str, parent=None):
+    def __init__(self, name: str, description: str, parent=None, *, site_key: str = ""):
         super().__init__(parent)
         self._name = name
         self._description = description
+        self._site_key = site_key
         self._star_label = None  # 保存五角星标签引用
         self._is_favorite = False  # 收藏状态
+        self._tool_windows: list[QWidget] = []  # 保存已打开的工具窗口，防止被GC
         self._setup_ui()
     
     def _setup_ui(self):
@@ -139,11 +141,9 @@ class ToolCard(QFrame):
         """打开工具按钮点击事件"""
         # 动态导入BaseToolWindow，避免循环导入
         from webharvest.ui.tool_windows import BaseToolWindow
-        
-        # 创建工具窗口
-        tool_window = BaseToolWindow(tool_name=self._name, parent=self.window())
-        
-        # 显示窗口
+        # 创建独立顶级窗口：不以主窗口为父级，这样点击主窗口时可以正常切到前面
+        tool_window = BaseToolWindow(tool_name=self._name, site_key=self._site_key)
+        self._tool_windows.append(tool_window)
         tool_window.show()
         
         print(f"打开工具: {self._name}")

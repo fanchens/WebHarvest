@@ -3,7 +3,6 @@ from __future__ import annotations
 import logging
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
-from typing import Optional
 
 from .config import ProjectPaths
 
@@ -11,9 +10,9 @@ from .config import ProjectPaths
 def get_logger(
     name: str,
     *,
-    log_file: Optional[str] = None,
+    log_file: str | None = None,
     level: int = logging.INFO,
-    paths: Optional[ProjectPaths] = None,
+    paths: ProjectPaths | None = None,
 ) -> logging.Logger:
     """
     获取带文件输出的 logger（按站点/任务拆分时非常有用）
@@ -49,5 +48,6 @@ def get_logger(
 
     logger._webharvest_configured = True  # type: ignore[attr-defined]
     return logger
+
 
 

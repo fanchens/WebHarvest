@@ -3,8 +3,6 @@
 提供可复用的菜单面板控件，支持动态菜单项和点击事件
 """
 
-from typing import List, Optional
-
 from PySide6.QtCore import Qt, Signal, QEventLoop, QPoint
 from PySide6.QtWidgets import (
     QWidget,
@@ -48,12 +46,12 @@ class LeftMenuPanel(QWidget):
     # 信号定义
     menu_item_clicked = Signal(int)  # 发送菜单项索引
 
-    def __init__(self, menu_items: Optional[List[str]] = None, parent=None):
+    def __init__(self, menu_items: list[str] | None = None, parent=None):
         super().__init__(parent)
 
         # 初始化属性
         self.menu_items = menu_items or DEFAULT_MENU_ITEMS
-        self.menu_labels: List[QLabel] = []
+        self.menu_labels: list[QLabel] = []
         self.current_menu_index = 0
 
         # 设置基本属性
@@ -107,7 +105,7 @@ class LeftMenuPanel(QWidget):
             label.style().unpolish(label)
             label.style().polish(label)
 
-    def set_menu_items(self, menu_items: List[str]):
+    def set_menu_items(self, menu_items: list[str]):
         """动态设置菜单项"""
         self.menu_items = menu_items
 
@@ -135,7 +133,7 @@ class LeftMenuPanel(QWidget):
         if self.menu_labels:
             self._set_selected(0)
 
-    def get_current_menu_item(self) -> Optional[str]:
+    def get_current_menu_item(self) -> str | None:
         """获取当前选中的菜单项文本"""
         if 0 <= self.current_menu_index < len(self.menu_items):
             return self.menu_items[self.current_menu_index]

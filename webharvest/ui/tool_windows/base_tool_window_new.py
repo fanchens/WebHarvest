@@ -28,7 +28,8 @@ class CheckboxTestWindow(QMainWindow):
 
         # 创建组件
         self.left_panel = LeftMenuPanel()
-        self.right_panel = RightContentPanel()
+        # 把当前“工具名”传给右侧内容面板，用于按站点显示不同内容（如 浏览器_登录 的链接）
+        self.right_panel = RightContentPanel(tool_name=self.tool_name)
 
         # 连接信号
         self.left_panel.menu_item_clicked.connect(self._on_menu_item_clicked)
@@ -78,6 +79,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 
 

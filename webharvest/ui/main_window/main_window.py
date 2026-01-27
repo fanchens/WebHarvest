@@ -542,7 +542,7 @@ class MainWindow(QMainWindow):
 
         # 创建工具卡片（FlowLayout自动处理换行和间距）
         for i, tool in enumerate(tools):
-            card = self._create_tool_card(tool["name"], tool["description"])
+            card = self._create_tool_card(tool["name"], tool["description"], site_key=tool.get("site_key", ""))
             # 更新五角星的收藏状态显示
             card._update_star_display()
             # 确保卡片可见
@@ -589,9 +589,9 @@ class MainWindow(QMainWindow):
         
         print(f"右侧内容已更新，卡片数量: {self.right_content_layout.count()}")
 
-    def _create_tool_card(self, name: str, description: str) -> ToolCard:
+    def _create_tool_card(self, name: str, description: str, *, site_key: str = "") -> ToolCard:
         """创建工具卡片 - 使用ToolCard类"""
-        card = ToolCard(name, description, self.right_content_widget)
+        card = ToolCard(name, description, self.right_content_widget, site_key=site_key)
         return card
 
     # ========== 事件处理方法（暂时留空） ==========

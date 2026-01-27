@@ -15,3 +15,4 @@ class XHSConfig:
     login_url: str = "https://www.xiaohongshu.com/explore"
 
 
+

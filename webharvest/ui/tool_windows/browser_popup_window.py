@@ -12,13 +12,12 @@ import subprocess
 import sys
 import os
 from pathlib import Path
-from typing import Optional
 
 
 class BrowserPopupWindow:
     """弹出式浏览器窗口 - 基于 WebView2（子进程）"""
 
-    def __init__(self, title: str = "浏览器", banner_text: Optional[str] = None, parent=None):
+    def __init__(self, title: str = "浏览器", banner_text: str | None = None, parent=None):
         self.title = title
         # 保留参数兼容性：用户要求不要横幅，这里不再做任何注入
         self.banner_text = banner_text
@@ -99,7 +98,8 @@ class BrowserPopupWindow:
                 # stdout=subprocess.PIPE,
                 # stderr=subprocess.PIPE,
             )
-            print(f"✓ WebView2 子进程已启动 (PID: {self._proc.pid})")
+            # 注意：Windows 控制台默认是 GBK，这里避免使用特殊符号（例如 ✓），否则会触发 UnicodeEncodeError
+            print(f"[WebView2] 子进程已启动 (PID: {self._proc.pid})")
         except Exception as e:
             import traceback
             error_msg = f"启动 WebView2 子进程失败: {e}\n{traceback.format_exc()}"
@@ -122,5 +122,15 @@ class BrowserPopupWindow:
     def activateWindow(self):
         """兼容接口：子进程窗口不受 Qt 控制"""
         pass
+
+    # 新增：用于判断浏览器子进程是否仍在运行
+    def is_running(self) -> bool:
+        """
+        内置浏览器是否还在运行（子进程是否存活）
+        """
+        try:
+            return self._proc is not None and self._proc.poll() is None
+        except Exception:
+            return False
 
 

@@ -1,18 +1,18 @@
 """
 工具窗口主框架 - 模块化版本
-使用独立的组件：左侧菜单面板、右侧内容面板、数据表格组件
+
+说明：
+- 左侧菜单按 site_key 动态生成（可隐藏某些菜单项，但不删除页面）
+- 右侧内容通过 site_profiles.py 的 page_factories 创建，对应 pages/ 目录
 """
+
 import sys
 
-from PySide6.QtWidgets import (
-    QApplication,
-    QMainWindow,
-    QWidget,
-    QHBoxLayout,
-)
+from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QHBoxLayout
 
 from .left_menu_panel import LeftMenuPanel
 from .right_content_panel import RightContentPanel
+from .site_profiles import get_site_profile
 
 # ===================== 窗口配置常量 ======================
 WINDOW_WIDTH = 1200
@@ -22,13 +22,17 @@ WINDOW_HEIGHT = 800
 class CheckboxTestWindow(QMainWindow):
     """工具窗口 - 使用模块化组件"""
 
-    def __init__(self, tool_name: str = "工具窗口", parent=None):
+    def __init__(self, tool_name: str = "工具窗口", site_key: str = "", parent=None):
         super().__init__(parent)
         self.tool_name = tool_name
+        self.site_key = site_key
 
-        # 创建组件
-        self.left_panel = LeftMenuPanel()
-        self.right_panel = RightContentPanel()
+        profile = get_site_profile(self.site_key)
+        menu_titles = [i.get("title", "") for i in profile["menu_items"] if i.get("visible", True)]
+
+        # 创建组件（左侧菜单 + 右侧内容）
+        self.left_panel = LeftMenuPanel(menu_titles)
+        self.right_panel = RightContentPanel(tool_name=self.tool_name, site_key=self.site_key)
 
         # 连接信号
         self.left_panel.menu_item_clicked.connect(self._on_menu_item_clicked)

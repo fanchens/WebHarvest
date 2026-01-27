@@ -3,10 +3,9 @@ from __future__ import annotations
 import random
 import time
 from dataclasses import dataclass
-from typing import Dict, List, Optional
 
 
-DEFAULT_UA_POOL: List[str] = [
+DEFAULT_UA_POOL: list[str] = [
     # Edge/Chrome 系（Windows）
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0",
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36 Edg/130.0.0.0",
@@ -26,7 +25,7 @@ class AntiDetection:
 - 这里先提供：UA 池、通用 headers、随机节奏（sleep）等通用逻辑，供各站点复用。
     """
 
-    ua_pool: List[str] = None  # type: ignore[assignment]
+    ua_pool: list[str] | None = None
     min_sleep_s: float = 0.2
     max_sleep_s: float = 1.0
 
@@ -37,7 +36,7 @@ class AntiDetection:
     def choose_user_agent(self) -> str:
         return random.choice(self.ua_pool) if self.ua_pool else ""
 
-    def build_headers(self, *, referer: Optional[str] = None) -> Dict[str, str]:
+    def build_headers(self, *, referer: str | None = None) -> dict[str, str]:
         # 注意：这只是“建议 headers”，是否生效取决于具体实现层（requests/playwright/浏览器注入等）
         headers = {
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
@@ -50,7 +49,7 @@ class AntiDetection:
             headers["Referer"] = referer
         return headers
 
-    def sleep_jitter(self, *, min_s: Optional[float] = None, max_s: Optional[float] = None):
+    def sleep_jitter(self, *, min_s: float | None = None, max_s: float | None = None):
         """
         随机延迟：模拟用户操作节奏（用于降低风控概率）
         """
@@ -59,5 +58,6 @@ class AntiDetection:
         if hi < lo:
             lo, hi = hi, lo
         time.sleep(random.uniform(lo, hi))
+
 
 

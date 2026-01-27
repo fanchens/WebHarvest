@@ -6,7 +6,8 @@ from dataclasses import asdict, is_dataclass
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Any
+from collections.abc import Iterable
 
 from .config import ProjectPaths
 from .utils import safe_filename
@@ -37,7 +38,7 @@ def _default_json(obj: Any):
     return str(obj)
 
 
-def _flatten_dict(d: Dict[str, Any], parent_key: str = "", sep: str = "_") -> Dict[str, Any]:
+def _flatten_dict(d: dict[str, Any], parent_key: str = "", sep: str = "_") -> dict[str, Any]:
     """展平嵌套字典"""
     items = []
     for k, v in d.items():
@@ -58,7 +59,7 @@ class JsonStorage:
     适合：一次性导出列表、配置快照等
     """
 
-    def __init__(self, *, paths: Optional[ProjectPaths] = None):
+    def __init__(self, *, paths: ProjectPaths | None = None):
         self.paths = (paths or ProjectPaths.detect()).ensure()
 
     def write(
@@ -83,7 +84,7 @@ class JsonlStorage:
     适合：采集过程持续写入、断点续写、流式落地
     """
 
-    def __init__(self, *, paths: Optional[ProjectPaths] = None):
+    def __init__(self, *, paths: ProjectPaths | None = None):
         self.paths = (paths or ProjectPaths.detect()).ensure()
 
     def append(
@@ -91,7 +92,7 @@ class JsonlStorage:
         *,
         site: str,
         name: str,
-        item: Dict[str, Any],
+        item: dict[str, Any],
         subdir: str = "",
     ) -> Path:
         out_dir = self.paths.outputs_dir / (subdir or site)
@@ -108,7 +109,7 @@ class JsonlStorage:
         *,
         site: str,
         name: str,
-        items: Iterable[Dict[str, Any]],
+        items: Iterable[dict[str, Any]],
         subdir: str = "",
     ) -> Path:
         out_dir = self.paths.outputs_dir / (subdir or site)
@@ -128,7 +129,7 @@ class CsvStorage:
     适合：结构化数据导出、数据分析
     """
 
-    def __init__(self, *, paths: Optional[ProjectPaths] = None):
+    def __init__(self, *, paths: ProjectPaths | None = None):
         self.paths = (paths or ProjectPaths.detect()).ensure()
 
     def write(
@@ -136,7 +137,7 @@ class CsvStorage:
         *,
         site: str,
         name: str,
-        data: List[Dict[str, Any]],
+        data: list[dict[str, Any]],
         subdir: str = "",
         flatten: bool = True,
     ) -> Path:
@@ -173,7 +174,7 @@ class ExcelStorage:
     适合：复杂表格、多工作表、格式化需求
     """
 
-    def __init__(self, *, paths: Optional[ProjectPaths] = None):
+    def __init__(self, *, paths: ProjectPaths | None = None):
         if not HAS_EXCEL:
             raise ImportError("需要安装 openpyxl: pip install openpyxl")
         self.paths = (paths or ProjectPaths.detect()).ensure()
@@ -183,7 +184,7 @@ class ExcelStorage:
         *,
         site: str,
         name: str,
-        data: List[Dict[str, Any]],
+        data: list[dict[str, Any]],
         subdir: str = "",
         flatten: bool = True,
         sheet_name: str = "Sheet1",
@@ -247,7 +248,7 @@ class TxtStorage:
     适合：简单列表、日志式输出、自定义格式
     """
 
-    def __init__(self, *, paths: Optional[ProjectPaths] = None):
+    def __init__(self, *, paths: ProjectPaths | None = None):
         self.paths = (paths or ProjectPaths.detect()).ensure()
 
     def write(
@@ -255,7 +256,7 @@ class TxtStorage:
         *,
         site: str,
         name: str,
-        data: List[Dict[str, Any]],
+        data: list[dict[str, Any]],
         subdir: str = "",
         separator: str = "\t",  # 默认 Tab 分隔（适合 Excel 打开）
         flatten: bool = True,
@@ -296,7 +297,7 @@ class DataExporter:
         exporter.save(site="xiaohongshu", name="notes", data=[...], format=SaveFormat.EXCEL)
     """
 
-    def __init__(self, *, paths: Optional[ProjectPaths] = None):
+    def __init__(self, *, paths: ProjectPaths | None = None):
         self.paths = paths or ProjectPaths.detect().ensure()
         self._json_storage = JsonStorage(paths=self.paths)
         self._jsonl_storage = JsonlStorage(paths=self.paths)
@@ -309,7 +310,7 @@ class DataExporter:
         *,
         site: str,
         name: str,
-        data: List[Dict[str, Any]],
+        data: list[dict[str, Any]],
         format: SaveFormat = SaveFormat.JSON,
         subdir: str = "",
         **kwargs,
@@ -345,7 +346,7 @@ class DataExporter:
             raise ValueError(f"不支持的格式: {format}")
 
     @staticmethod
-    def get_supported_formats() -> List[str]:
+    def get_supported_formats() -> list[str]:
         """获取支持的格式列表"""
         formats = [SaveFormat.JSON.value, SaveFormat.JSONL.value, SaveFormat.CSV.value, SaveFormat.TXT.value]
         if HAS_EXCEL:

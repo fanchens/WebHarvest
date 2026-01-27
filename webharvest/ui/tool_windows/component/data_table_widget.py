@@ -7,7 +7,7 @@
 """
 
 from functools import partial
-from typing import Optional, List, Sequence
+from typing import Sequence
 
 from PySide6.QtCore import Qt, QTimer, QEventLoop, QPoint
 from PySide6.QtGui import QColor
@@ -90,18 +90,18 @@ class DataTableWidget(QTableWidget):
         self,
         parent=None,
         *,
-        extra_headers: Optional[Sequence[str]] = None,
-        extra_widths: Optional[Sequence[int]] = None,
+        extra_headers: Sequence[str] | None = None,
+        extra_widths: Sequence[int] | None = None,
     ):
         super().__init__(parent)
-        self.select_all_checkbox: Optional[QCheckBox] = None
+        self.select_all_checkbox: QCheckBox | None = None
         self.is_updating_checkboxes = False
-        self._extra_headers: List[str] = list(extra_headers) if extra_headers is not None else list(DEFAULT_EXTRA_HEADERS)
-        self._extra_widths: List[int] = list(extra_widths) if extra_widths is not None else list(DEFAULT_EXTRA_WIDTHS)
+        self._extra_headers: list[str] = list(extra_headers) if extra_headers is not None else list(DEFAULT_EXTRA_HEADERS)
+        self._extra_widths: list[int] = list(extra_widths) if extra_widths is not None else list(DEFAULT_EXTRA_WIDTHS)
 
         # 定时器管理
-        self._pos_update_timer: Optional[QTimer] = None
-        self._select_all_update_timer: Optional[QTimer] = None
+        self._pos_update_timer: QTimer | None = None
+        self._select_all_update_timer: QTimer | None = None
 
         # 初始化表格
         self._setup_table()
@@ -152,11 +152,11 @@ class DataTableWidget(QTableWidget):
         # 设置表头全选复选框
         self.setup_header_checkbox()
 
-    def get_headers(self) -> List[str]:
+    def get_headers(self) -> list[str]:
         """返回当前 schema 的完整表头"""
         return list(BASE_HEADERS) + list(self._extra_headers)
 
-    def get_column_widths(self) -> List[int]:
+    def get_column_widths(self) -> list[int]:
         """返回当前 schema 的完整列宽"""
         # 宽度不足时用默认值兜底；超出则截断
         extra_widths = list(self._extra_widths)[: len(self._extra_headers)]
@@ -168,7 +168,7 @@ class DataTableWidget(QTableWidget):
         self,
         *,
         extra_headers: Sequence[str],
-        extra_widths: Optional[Sequence[int]] = None,
+        extra_widths: Sequence[int] | None = None,
         clear_rows: bool = True,
     ):
         """
@@ -384,7 +384,7 @@ class DataTableWidget(QTableWidget):
         self.select_all_checkbox.setChecked(total_enabled > 0 and total_checked == total_enabled)
         self.select_all_checkbox.blockSignals(False)
 
-    def get_selected_rows(self) -> List[int]:
+    def get_selected_rows(self) -> list[int]:
         """获取选中的行号列表"""
         selected_rows = []
         for row in range(self.rowCount()):
@@ -395,7 +395,7 @@ class DataTableWidget(QTableWidget):
                     selected_rows.append(row)
         return selected_rows
 
-    def load_data(self, data: List[List[str]]):
+    def load_data(self, data: list[list[str]]):
         """加载自定义数据"""
         self.setRowCount(len(data))
         self.setUpdatesEnabled(False)

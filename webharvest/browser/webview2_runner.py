@@ -11,11 +11,14 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+from pathlib import Path
 import time
+import os
 
 import webview
 
 from .cookie_manager import CookieManager
+from .profile_path import get_webview2_profile_dir
 
 
 DEFAULT_UA = (
@@ -37,6 +40,16 @@ def main(argv: list[str] | None = None) -> int:
         print(f"[WebView2 Runner] 启动窗口: {args.title} -> {args.url}")
 
         cookie_manager = CookieManager()
+
+        # 统一 WebView2 user_data 目录，方便后续一键清理缓存 + 保持登录状态
+        profile_dir = get_webview2_profile_dir()
+        try:
+            Path(profile_dir).mkdir(parents=True, exist_ok=True)
+            # 对 WebView2 来说，使用环境变量 WEBVIEW2_USER_DATA_FOLDER 指定缓存目录
+            os.environ["WEBVIEW2_USER_DATA_FOLDER"] = str(profile_dir)
+        except Exception:
+            # 目录/环境变量设置失败不致命，只是后续无法统一清理
+            pass
 
         window = webview.create_window(
             title=args.title,
@@ -64,7 +77,9 @@ def main(argv: list[str] | None = None) -> int:
             try:
                 # 第一次循环：加载已保存的 Cookie，并初始化 Cookie 哈希值
                 if not cookies_loaded[0]:
-                    cookie_manager.apply_cookies_to_webview(w, args.url, verbose=False)
+                    # 第一次循环：尝试加载已保存的 Cookie
+                    loaded = cookie_manager.apply_cookies_to_webview(w, args.url, verbose=True)
+                    print(f"[WebView2 Runner] 初次加载 Cookie，结果: {loaded}")
                     cookies_loaded[0] = True
                     last_save_time[0] = current_time
                     
@@ -109,7 +124,7 @@ def main(argv: list[str] | None = None) -> int:
                         
                         # 如果 Cookie 内容有变化（哈希不同），说明可能有新的 Cookie 或值变了（比如用户登录了）
                         if current_hash and current_hash != last_cookie_hash[0]:
-                            saved = cookie_manager.save_cookies_from_webview(w, args.url, verbose=False)
+                            saved = cookie_manager.save_cookies_from_webview(w, args.url, verbose=True)
                             if saved:
                                 # 只有真的发生变化并写入时才提示（等同“登录/状态更新”场景）
                                 print("[WebView2 Runner] 检测到 Cookie 变化，已保存")
@@ -136,7 +151,14 @@ def main(argv: list[str] | None = None) -> int:
             return False
 
         print(f"[WebView2 Runner] 调用 webview.start()...")
-        webview.start(func=custom_loop, args=(window,), debug=False, user_agent=args.user_agent)
+        # 关键：关闭私有模式，否则 pywebview 会使用临时 user data folder（关闭窗口后会清理），导致登录状态无法持久化
+        webview.start(
+            func=custom_loop,
+            args=(window,),
+            debug=False,
+            user_agent=args.user_agent,
+            private_mode=False,
+        )
         print(f"[WebView2 Runner] 窗口已关闭")
         
         # 窗口关闭时，最后保存一次 Cookie（确保不丢失）

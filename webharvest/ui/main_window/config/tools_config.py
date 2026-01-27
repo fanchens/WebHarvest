@@ -6,25 +6,25 @@
 # 工具数据字典
 TOOLS_DATA = {
     "热门工具": [
-        {"name": "D音提取作品", "description": "D音提取作品", "enabled": True},
-        {"name": "K手提取作品", "description": "K手提取作品", "enabled": True},
-        {"name": "小红薯提取作品", "description": "小红薯提取作品", "enabled": True},
+        {"name": "抖音提取作品", "description": "抖音提取作品", "site_key": "douyin", "enabled": True},
+        {"name": "快手提取作品", "description": "快手提取作品", "site_key": "kuaishou", "enabled": True},
+        {"name": "小红书提取作品", "description": "小红书提取作品", "site_key": "xiaohongshu", "enabled": True},
         {"name": "TK提取作品", "description": "TK提取作品", "enabled": True},
         {"name": "T条提取作品", "description": "T条提取作品", "enabled": True},
         {"name": "BiLi提取作品", "description": "BiLi提取作品", "enabled": True},
         {"name": "YouTube提取作品", "description": "YouTube提取作品", "enabled": True},
     ],
     "作品提取工具": [
-        {"name": "D音提取作品", "description": "D音提取作品", "enabled": True},
-        {"name": "K手提取作品", "description": "K手提取作品", "enabled": True},
-        {"name": "小红薯提取作品", "description": "小红薯提取作品", "enabled": True},
+        {"name": "抖音提取作品", "description": "抖音提取作品", "site_key": "douyin", "enabled": True},
+        {"name": "快手提取作品", "description": "快手提取作品", "site_key": "kuaishou", "enabled": True},
+        {"name": "小红书提取作品", "description": "小红书提取作品", "site_key": "xiaohongshu", "enabled": True},
     ],
     "直播录制工具": [
-        {"name": "D音直播录制", "description": "D音直播录制", "enabled": True},
-        {"name": "K手直播录制", "description": "K手直播录制", "enabled": True},
+        {"name": "抖音直播录制", "description": "抖音直播录制", "site_key": "douyin", "enabled": True},
+        {"name": "快手直播录制", "description": "快手直播录制", "site_key": "kuaishou", "enabled": True},
     ],
     "电商工具": [
-        {"name": "D音电商达人提取", "description": "D音电商达人提取", "enabled": True},
+        {"name": "抖音电商达人提取", "description": "抖音电商达人提取", "site_key": "douyin", "enabled": True},
     ],
     "AI智能工具": [
         {"name": "AI智能工具1", "description": "AI智能工具1", "enabled": True},

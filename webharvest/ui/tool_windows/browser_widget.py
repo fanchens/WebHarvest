@@ -5,7 +5,7 @@
 """
 
 import threading
-from typing import Optional, Callable
+from collections.abc import Callable
 from urllib.parse import urlparse
 
 import webview
@@ -45,7 +45,7 @@ class BrowserWidget(QWidget):
         parent=None,
         show_navigation: bool = True,
         show_status: bool = True,
-        user_agent: Optional[str] = None,
+        user_agent: str | None = None,
         accept_language: str = "zh-CN,zh;q=0.9",
     ):
         super().__init__(parent)

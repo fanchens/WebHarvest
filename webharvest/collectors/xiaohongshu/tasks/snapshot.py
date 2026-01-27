@@ -4,7 +4,7 @@ import json
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 
 @dataclass
@@ -24,7 +24,7 @@ def _outputs_dir() -> Path:
     return out
 
 
-def take_page_snapshot(window: Any, *, user_agent: str = "", save: bool = True) -> Optional[PageSnapshot]:
+def take_page_snapshot(window: Any, *, user_agent: str = "", save: bool = True) -> PageSnapshot | None:
     """
     最小可用：从当前页面取一些基础信息，便于验证“打开/登录/带 Cookie”链路正常。
     window: pywebview Window（有 evaluate_js 方法）
@@ -65,5 +65,6 @@ def take_page_snapshot(window: Any, *, user_agent: str = "", save: bool = True) 
         out.write_text(json.dumps(asdict(snap), ensure_ascii=False, indent=2), encoding="utf-8")
 
     return snap
+
 
 
