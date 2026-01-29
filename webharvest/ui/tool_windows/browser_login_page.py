@@ -163,14 +163,38 @@ class BrowserLoginPage(QWidget):
         """弹出浏览器窗口打开URL"""
         # 用户要求不显示横幅，避免影响页面（如登录按钮）
         win = BrowserPopupWindow(title="浏览器", banner_text=None, parent=self.window())
-        win.open_url(url)
+        # 获取当前站点 key，传递给浏览器子进程（用于分离不同平台的 profile 目录）
+        site_key = self._site_key or self._infer_site_key(self._tool_name)
+        win.open_url(url, site_key=site_key)
         win.show()
         win.raise_()
         win.activateWindow()
         self._windows.append(win)  # 防止被垃圾回收
 
+    @staticmethod
+    def _get_site_domains(site_key: str) -> list[str]:
+        """
+        根据站点 key 返回对应的域名列表（用于删除时只删除该平台的 Cookie）
+
+        Args:
+            site_key: 平台标识（如 "douyin", "xiaohongshu"）
+
+        Returns:
+            域名列表，如 ["www.douyin.com", "iesdouyin.com"]
+        """
+        site_key = (site_key or "").lower()
+        domain_map = {
+            "douyin": ["www.douyin.com", "iesdouyin.com", "douyin.com"],
+            "xiaohongshu": ["www.xiaohongshu.com", "xiaohongshu.com"],
+            "kuaishou": ["www.kuaishou.com", "kuaishou.com"],
+            "tiktok": ["www.tiktok.com", "tiktok.com"],
+            "bilibili": ["www.bilibili.com", "bilibili.com"],
+            "youtube": ["www.youtube.com", "youtube.com"],
+        }
+        return domain_map.get(site_key, [])
+
     def _clear_cache_and_login(self):
-        """清除缓存与登录信息（本地cookie文件）"""
+        """清除缓存与登录信息（只删除当前平台相关的）"""
         from pathlib import Path
         import shutil
 
@@ -189,28 +213,41 @@ class BrowserLoginPage(QWidget):
             )
             return
 
-        # 1) 检查本地 Cookie 文件（域名级 JSON）
+        # 获取当前站点 key 和对应的域名列表
+        site_key = self._site_key or self._infer_site_key(self._tool_name)
+        target_domains = self._get_site_domains(site_key)
+
+        # 1) 检查当前平台相关的 Cookie 文件（域名级 JSON）
+        platform_cookie_domains = []
         try:
-            domains = self.cookie_storage.list_domains()
+            all_domains = self.cookie_storage.list_domains()
+            # 只筛选出当前平台相关的域名
+            for domain in all_domains:
+                # 检查域名是否匹配（支持子域名匹配，如 "www.douyin.com" 匹配 "douyin.com"）
+                for target_domain in target_domains:
+                    if domain == target_domain or domain.endswith("." + target_domain):
+                        platform_cookie_domains.append(domain)
+                        break
         except Exception as e:
             print(f"读取本地 cookie 列表失败: {e}")
             QMessageBox.warning(self, "错误", f"清理失败: {e}")
             return
 
-        # 2) 检查 WebView2 浏览器缓存目录
-        profile_dir = get_webview2_profile_dir()
+        # 2) 检查当前平台的 WebView2 浏览器缓存目录
+        profile_dir = get_webview2_profile_dir(site_key=site_key)
         profile_path = Path(profile_dir)
         has_profile_dir = profile_path.exists() and any(profile_path.iterdir())
 
-        has_cookie_files = bool(domains)
+        has_cookie_files = bool(platform_cookie_domains)
 
         # 既没有 Cookie 文件，也没有浏览器缓存目录内容：在这一弹窗里提示“无需删除”
         if not has_cookie_files and not has_profile_dir:
+            site_name = {"douyin": "抖音", "xiaohongshu": "小红书", "kuaishou": "快手"}.get(site_key, "当前平台")
             confirm(
                 self,
                 ConfirmOptions(
                     title="确认清理",
-                    message="当前没有已保存的浏览器缓存与登录信息，无需删除。",
+                    message=f"当前没有已保存的{site_name}浏览器缓存与登录信息，无需删除。",
                     icon=ConfirmIcon.INFO,
                     ok_text="知道了",
                     cancel_text="关闭",
@@ -220,11 +257,12 @@ class BrowserLoginPage(QWidget):
             return
 
         # 有任意一类数据时：弹出危险操作确认框
+        site_name = {"douyin": "抖音", "xiaohongshu": "小红书", "kuaishou": "快手"}.get(site_key, "当前平台")
         ok = confirm(
             self,
             ConfirmOptions(
                 title="确认清理",
-                message="确定要删除浏览器缓存与登录信息吗？",
+                message=f"确定要删除{site_name}的浏览器缓存与登录信息吗？\n（仅删除{site_name}相关数据，不影响其他平台）",
                 icon=ConfirmIcon.WARNING,
                 ok_text="确定",
                 cancel_text="取消",
@@ -234,19 +272,24 @@ class BrowserLoginPage(QWidget):
         if not ok:
             return
 
-        # 先清 Cookie 文件
+        # 先清当前平台相关的 Cookie 文件
+        deleted_count = 0
         try:
-            for d in domains:
-                self.cookie_storage.delete_cookies(d)
+            for domain in platform_cookie_domains:
+                if self.cookie_storage.delete_cookies(domain):
+                    deleted_count += 1
+            if deleted_count > 0:
+                print(f"已删除 {deleted_count} 个{site_name}相关的 Cookie 文件")
         except Exception as e:
             print(f"删除本地 cookie 文件失败: {e}")
             QMessageBox.warning(self, "错误", f"清理失败: {e}")
             return
 
-        # 再清 WebView2 缓存目录（如存在）
+        # 再清当前平台的 WebView2 缓存目录（如存在）
         try:
             if profile_path.exists():
                 shutil.rmtree(profile_path, ignore_errors=True)
+                print(f"已删除{site_name}的 WebView2 缓存目录: {profile_path}")
         except Exception as e:
             print(f"删除 WebView2 缓存目录失败: {e}")
             # 缓存删不干净不算致命，不再额外弹窗

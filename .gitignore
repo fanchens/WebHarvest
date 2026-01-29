@@ -63,5 +63,5 @@ temp_*.bat
 
 # 测试目录（不提交到 git）
 测试/
-WebHarvest/测试/
+WebHarvest/tests/
 

@@ -31,9 +31,13 @@ class BrowserPopupWindow:
             "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0"
         )
 
-    def open_url(self, url: str):
+    def open_url(self, url: str, site_key: str = ""):
         """
         打开指定URL（启动独立子进程，不阻塞 Qt）
+
+        Args:
+            url: 要打开的URL
+            site_key: 平台标识（如 "douyin", "xiaohongshu"），用于分离不同平台的 profile 目录
         """
         if not url.startswith(("http://", "https://")):
             url = "https://" + url
@@ -70,6 +74,9 @@ class BrowserPopupWindow:
                 "--user-agent",
                 self._user_agent,
             ]
+            # 如果指定了 site_key，传递给子进程（用于分离不同平台的 profile 目录）
+            if site_key:
+                cmd.extend(["--site-key", site_key])
 
             print(f"启动 WebView2 子进程: {' '.join(cmd)}")
             print(f"工作目录: {webharvest_dir}")
