@@ -1,0 +1,88 @@
+{
+  "domain": "www.xiaohongshu.com",
+  "cookies": [
+    {
+      "name": "abRequestId",
+      "value": "8c33b852-c5d3-5a76-b341-487116206c5b",
+      "domain": "www.xiaohongshu.com",
+      "path": "/",
+      "secure": true,
+      "httpOnly": false
+    },
+    {
+      "name": "xsecappid",
+      "value": "xhs-pc-web",
+      "domain": "www.xiaohongshu.com",
+      "path": "/",
+      "secure": true,
+      "httpOnly": false
+    },
+    {
+      "name": "a1",
+      "value": "19c026f4b6didjcie9872qxk1kouupcnsrr51c2ru50000639687",
+      "domain": "www.xiaohongshu.com",
+      "path": "/",
+      "secure": true,
+      "httpOnly": false
+    },
+    {
+      "name": "webId",
+      "value": "5be56f72ce5ab09218c4366b6be5f247",
+      "domain": "www.xiaohongshu.com",
+      "path": "/",
+      "secure": true,
+      "httpOnly": false
+    },
+    {
+      "name": "gid",
+      "value": "yjS8JWWSyDMyyjS8JKi4DFSJKf3fVS3djYWJFF7ACTyTl22877USIy888KqjKYW8DDDSDWj4",
+      "domain": "www.xiaohongshu.com",
+      "path": "/",
+      "secure": true,
+      "httpOnly": false
+    },
+    {
+      "name": "websectiga",
+      "value": "984412fef754c018e472127b8effd174be8a5d51061c991aadd200c69a2801d6",
+      "domain": "www.xiaohongshu.com",
+      "path": "/",
+      "secure": true,
+      "httpOnly": false
+    },
+    {
+      "name": "sec_poison_id",
+      "value": "1e7e1846-ed57-47ad-bab9-b3fee6139ff0",
+      "domain": "www.xiaohongshu.com",
+      "path": "/",
+      "secure": true,
+      "httpOnly": false
+    },
+    {
+      "name": "webBuild",
+      "value": "5.7.7",
+      "domain": "www.xiaohongshu.com",
+      "path": "/",
+      "secure": true,
+      "httpOnly": false
+    },
+    {
+      "name": "loadts",
+      "value": "1769596504994",
+      "domain": "www.xiaohongshu.com",
+      "path": "/",
+      "secure": true,
+      "httpOnly": false
+    },
+    {
+      "name": "unread",
+      "value": "{%22ub%22:%2269769733000000000a0287d8%22%2C%22ue%22:%2269704c91000000000b008ede%22%2C%22uc%22:26}",
+      "domain": "www.xiaohongshu.com",
+      "path": "/",
+      "secure": true,
+      "httpOnly": false
+    }
+  ],
+  "last_login": "2026-01-28T18:37:17.990750",
+  "login_status": "success",
+  "saved_at": "2026-01-28T18:37:17.990750"
+}
